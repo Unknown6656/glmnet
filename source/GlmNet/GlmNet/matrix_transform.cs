@@ -23,11 +23,12 @@ namespace GlmNet
             var result = mat4.identity();
             result[0, 0] = (2.0f * nearVal) / (right - left);
             result[1, 1] = (2.0f * nearVal) / (top - bottom);
-            result[2, 0] = (right + left) / (right - left);
-            result[2, 1] = (top + bottom) / (top - bottom);
+            result[2, 0] = (2.0f * (right + left)) / (right - left);
+            result[2, 1] = (2.0f * (top + bottom)) / (top - bottom);
             result[2, 2] = -(farVal + nearVal) / (farVal - nearVal);
             result[2, 3] = -1.0f;
-            result[3, 2] = -(2.0f * farVal * nearVal) / (farVal - nearVal);
+            result[3, 2] = (2.0f * farVal * nearVal) / (farVal - nearVal);
+			result[3, 3] = 0.0f;
             return result;
         }
 
