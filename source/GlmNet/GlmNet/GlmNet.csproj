@@ -45,7 +45,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="GlobalSuppressions.cs" />
-    <Compile Include="matrix.cs" />
+    <Compile Include="glm.cs" />
     <Compile Include="trigonometric.cs" />
     <Compile Include="mat2.cs" />
     <Compile Include="mat3.cs" />
@@ -55,7 +55,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="geometric.cs" />
     <Compile Include="mat4.cs" />
     <Compile Include="vec2.cs" />
   </ItemGroup>

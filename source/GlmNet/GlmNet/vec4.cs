@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
+
 
 namespace GlmNet
 {
@@ -6,12 +9,12 @@ namespace GlmNet
     /// Represents a four dimensional vector.
     /// </summary>
     public struct vec4
+        : ivec<vec4>
     {
         public float x { set; get; }
         public float y { set; get; }
         public float z { set; get; }
         public float w { set; get; }
-
 
         public float this[int index]
         {
@@ -36,6 +39,11 @@ namespace GlmNet
             }
         }
 
+        public static int Dimension => 4;
+
+        public float Length => this.length();
+
+
         public vec4(float s)
             : this(s, s, s, s)
         {
@@ -59,18 +67,35 @@ namespace GlmNet
         {
         }
 
+        public vec4(IEnumerable<float> v)
+            : this() => from_array(v?.ToArray() ?? new float[0]);
+
+        public void from_array(params float[] v)
+        {
+            for (int i = 0; i < Dimension; ++i)
+                this[i] = v[i];
+        }
+
         public float[] to_array() => new[] { x, y, z, w };
 
+        public vec4 Normalize() => this.normalize();
+
         /// <inheritdoc/>
-        public override bool Equals(object obj) => obj is vec4 vec && vec.x == x && vec.y == y && vec.z == z && vec.w == w;
+        public override bool Equals(object obj) => obj is vec4 vec &&
+                                                   vec.x == x &&
+                                                   vec.y == y &&
+                                                   vec.z == z &&
+                                                   vec.w == w;
 
         /// <inheritdoc/>
         public override int GetHashCode() => x.GetHashCode() ^ y.GetHashCode() ^ z.GetHashCode() ^ w.GetHashCode();
 
 
+        public static vec4 operator ~(vec4 v) => v.Normalize();
+
         public static vec4 operator -(vec4 v) => v * -1;
 
-        public static vec4 operator +(vec4 v1, vec4 v2) => new vec4(v1.x + v2.x, v1.y + v2.y, v1.z + v2.z, v1.w + v2.w);
+        public static vec4 operator +(vec4 v1, vec4 v2) => (v1.x + v2.x, v1.y + v2.y, v1.z + v2.z, v1.w + v2.w);
 
         public static vec4 operator +(vec4 v, float f) => v + new vec4(f);
 
@@ -78,11 +103,13 @@ namespace GlmNet
 
         public static vec4 operator -(vec4 v, float f) => v + -f;
 
+        public static vec4 operator -(float f, vec4 v) => -v + f;
+
         public static vec4 operator *(vec4 v, float f) => v * new vec4(f);
 
         public static vec4 operator *(float f, vec4 v) => v * f;
 
-        public static vec4 operator *(vec4 v1, vec4 v2) => new vec4(v2.x * v1.x, v2.y * v1.y, v2.z * v1.z, v2.w * v1.w);
+        public static vec4 operator *(vec4 v1, vec4 v2) => (v2.x * v1.x, v2.y * v1.y, v2.z * v1.z, v2.w * v1.w);
 
         public static vec4 operator /(vec4 v, float f) => v * (1 / f);
 
@@ -105,5 +132,9 @@ namespace GlmNet
         /// The result of the operator.
         /// </returns>
         public static bool operator !=(vec4 v1, vec4 v2) => !(v1 == v2);
+
+        public static implicit operator (float x, float y, float z, float w) (vec4 v) => (v.x, v.y, v.z, v.w);
+
+        public static implicit operator vec4((float x, float y, float z, float w) t) => new vec4(t.x, t.y, t.z, t.w);
     }
 }

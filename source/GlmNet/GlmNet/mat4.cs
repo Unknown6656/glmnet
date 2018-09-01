@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System;
 
 
 namespace GlmNet
@@ -46,6 +47,8 @@ namespace GlmNet
             get => cols[column][row];
             set => cols[column][row] = value;
         }
+
+        public bool IsInvertible => Math.Abs(Determinant) >= float.Epsilon;
 
 
         /// <summary>
@@ -163,18 +166,12 @@ namespace GlmNet
                                                                      );
 
         /// <summary>
-        /// Multiplies the <paramref name="m"/> matrix by the <paramref name="rhs"/> matrix.
+        /// Multiplies the <paramref name="m1"/> matrix by the <paramref name="m2"/> matrix.
         /// </summary>
-        /// <param name="m">The LHS matrix.</param>
-        /// <param name="rhs">The RHS matrix.</param>
-        /// <returns>The product of <paramref name="m"/> and <paramref name="rhs"/>.</returns>
-        public static mat4 operator *(mat4 m, mat4 rhs) => new mat4(new[]
-        {
-            m[0][0] * rhs[0] + m[1][0] * rhs[1] + m[2][0] * rhs[2] + m[3][0] * rhs[3],
-            m[0][1] * rhs[0] + m[1][1] * rhs[1] + m[2][1] * rhs[2] + m[3][1] * rhs[3],
-            m[0][2] * rhs[0] + m[1][2] * rhs[1] + m[2][2] * rhs[2] + m[3][2] * rhs[3],
-            m[0][3] * rhs[0] + m[1][3] * rhs[1] + m[2][3] * rhs[2] + m[3][3] * rhs[3]
-        });
+        /// <param name="m1">The LHS matrix.</param>
+        /// <param name="m2">The RHS matrix.</param>
+        /// <returns>The product of <paramref name="m1"/> and <paramref name="m2"/>.</returns>
+        public static mat4 operator *(mat4 m1, mat4 m2) => new mat4(glm._4.Select(j => new vec4(glm._4.Select(i => glm._4.Sum(k => m1[k, j] * m2[i, k])))));
 
         public static mat4 operator *(mat4 m, float f) => new mat4(new[]
         {
@@ -183,5 +180,11 @@ namespace GlmNet
             m[2] * f,
             m[3] * f
         });
+
+        public static mat4 operator /(mat4 m, float f) => m * (1 / f);
+
+        public static implicit operator (vec4 a, vec4 b, vec4 c, vec4 d) (mat4 v) => (v[0], v[1], v[2], v[3]);
+
+        public static implicit operator mat4((vec4 a, vec4 b, vec4 c, vec4 d) t) => new mat4(t.a, t.b, t.c, t.d);
     }
 }

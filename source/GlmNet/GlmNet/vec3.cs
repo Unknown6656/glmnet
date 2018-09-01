@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
+
 
 namespace GlmNet
 {
@@ -6,6 +9,7 @@ namespace GlmNet
     /// Represents a three dimensional vector.
     /// </summary>
     public struct vec3
+        : ivec<vec3>
     {
         public float x { get; set; }
         public float y { get; set; }
@@ -31,6 +35,10 @@ namespace GlmNet
                 else throw new IndexOutOfRangeException();
             }
         }
+
+        public static int Dimension => 3;
+
+        public float Length => this.length();
 
 
         public vec3(float s)
@@ -60,12 +68,36 @@ namespace GlmNet
         {
         }
 
+        public vec3(IEnumerable<float> v)
+            : this() => from_array(v?.ToArray() ?? new float[0]);
+
         public float[] to_array() => new[] { x, y, z };
 
+        public void from_array(params float[] v)
+        {
+            for (int i = 0; i < Dimension; ++i)
+                this[i] = v[i];
+        }
+
+        public vec3 Normalize() => this.normalize();
+
+        /// <inheritdoc/>
+        public override bool Equals(object obj) => obj is vec3 vec && vec.x == x && vec.y == y && vec.z == z;
+
+        /// <summary>
+        /// Returns a hash code for this instance.
+        /// </summary>
+        /// <returns>
+        /// A hash code for this instance, suitable for use in hashing algorithms and data structures like a hash table. 
+        /// </returns>
+        public override int GetHashCode() => x.GetHashCode() ^ y.GetHashCode() ^ z.GetHashCode();
+
+
+        public static vec3 operator ~(vec3 v) => v.Normalize();
 
         public static vec3 operator -(vec3 v) => v * -1;
 
-        public static vec3 operator +(vec3 v1, vec3 v2) => new vec3(v1.x + v2.x, v1.y + v2.y, v1.z + v2.z);
+        public static vec3 operator +(vec3 v1, vec3 v2) => (v1.x + v2.x, v1.y + v2.y, v1.z + v2.z);
 
         public static vec3 operator +(vec3 v, float f) => v + new vec3(f);
 
@@ -73,17 +105,15 @@ namespace GlmNet
 
         public static vec3 operator -(vec3 v, float f) => v + -f;
 
+        public static vec3 operator -(float f, vec3 v) => -v + f;
+
         public static vec3 operator *(vec3 v, float f) => v * new vec3(f);
 
         public static vec3 operator *(float f, vec3 v) => v * f;
 
-        public static vec3 operator *(vec3 v1, vec3 v2) => new vec3(v2.x * v1.x, v2.y * v1.y, v2.z * v1.z);
+        public static vec3 operator *(vec3 v1, vec3 v2) => (v2.x * v1.x, v2.y * v1.y, v2.z * v1.z);
 
         public static vec3 operator /(vec3 v, float f) => v * (1 / f);
-
-
-        /// <inheritdoc/>
-        public override bool Equals(object obj) => obj is vec3 vec && vec.x == x && vec.y == y && vec.z == z;
 
         /// <summary>
         /// Implements the operator ==.
@@ -105,12 +135,8 @@ namespace GlmNet
         /// </returns>
         public static bool operator !=(vec3 v1, vec3 v2) => !(v1 == v2);
 
-        /// <summary>
-        /// Returns a hash code for this instance.
-        /// </summary>
-        /// <returns>
-        /// A hash code for this instance, suitable for use in hashing algorithms and data structures like a hash table. 
-        /// </returns>
-        public override int GetHashCode() => x.GetHashCode() ^ y.GetHashCode() ^ z.GetHashCode();
+        public static implicit operator (float x, float y, float z) (vec3 v) => (v.x, v.y, v.z);
+
+        public static implicit operator vec3((float x, float y, float z) t) => new vec3(t.x, t.y, t.z);
     }
 }

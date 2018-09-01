@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System;
 
 
 namespace GlmNet
@@ -46,6 +47,13 @@ namespace GlmNet
             get => cols[column][row];
             set => cols[column][row] = value;
         }
+
+        public float Determinant =>
+            this[0, 0] * (this[1, 1] * this[2, 2] - this[2, 1] * this[1, 2])
+          - this[1, 0] * (this[0, 1] * this[2, 2] - this[2, 1] * this[0, 2])
+          + this[2, 0] * (this[0, 1] * this[1, 2] - this[1, 1] * this[0, 2]);
+
+        public bool IsInvertible => Math.Abs(Determinant) >= float.Epsilon;
 
 
         /// <summary>
@@ -156,16 +164,19 @@ namespace GlmNet
         );
 
         /// <summary>
-        /// Multiplies the <paramref name="m"/> matrix by the <paramref name="rhs"/> matrix.
+        /// Multiplies the <paramref name="m1"/> matrix by the <paramref name="m2"/> matrix.
         /// </summary>
-        /// <param name="m">The LHS matrix.</param>
-        /// <param name="rhs">The RHS matrix.</param>
-        /// <returns>The product of <paramref name="m"/> and <paramref name="rhs"/>.</returns>
-        public static mat3 operator *(mat3 m, mat3 rhs) => new mat3(
-            m[0][0] * rhs[0] + m[1][0] * rhs[1] + m[2][0] * rhs[2],
-            m[0][1] * rhs[0] + m[1][1] * rhs[1] + m[2][1] * rhs[2],
-            m[0][2] * rhs[0] + m[1][2] * rhs[1] + m[2][2] * rhs[2]);
+        /// <param name="m1">The LHS matrix.</param>
+        /// <param name="m2">The RHS matrix.</param>
+        /// <returns>The product of <paramref name="m1"/> and <paramref name="m2"/>.</returns>
+        public static mat3 operator *(mat3 m1, mat3 m2) => new mat3(glm._3.Select(j => new vec3(glm._3.Select(i => glm._3.Sum(k => m1[k, j] * m2[i, k])))));
 
         public static mat3 operator *(mat3 m, float f) => new mat3(m[0] * f, m[1] * f, m[2] * f);
+
+        public static mat3 operator /(mat3 m, float f) => m * (1 / f);
+
+        public static implicit operator (vec3 a, vec3 b, vec3 c) (mat3 v) => (v[0], v[1], v[2]);
+
+        public static implicit operator mat3((vec3 a, vec3 b, vec3 c) t) => new mat3(t.a, t.b, t.c);
     }
 }

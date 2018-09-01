@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System;
 
 
 namespace GlmNet
@@ -47,6 +48,10 @@ namespace GlmNet
             set => cols[column][row] = value;
         }
 
+        public float Determinant => this[0, 0] * this[1, 1] - this[1, 0] * this[0, 1];
+
+        public bool IsInvertible => Math.Abs(Determinant) >= float.Epsilon;
+
 
         /// <summary>
         /// Initializes a new instance of the <see cref="mat2"/> struct.
@@ -78,6 +83,7 @@ namespace GlmNet
             : this(new vec2(a, b), new vec2(c, d))
         {
         }
+
 
         /// <summary>
         /// Returns the matrix as a flat array of elements, column major.
@@ -156,10 +162,14 @@ namespace GlmNet
         /// <param name="m1">The LHS matrix.</param>
         /// <param name="m2">The RHS matrix.</param>
         /// <returns>The product of <paramref name="m1"/> and <paramref name="m2"/>.</returns>
-        public static mat2 operator *(mat2 m1, mat2 m2) => new mat2(
-            m1[0][0] * m2[0] + m1[1][0] * m2[1],
-            m1[0][1] * m2[0] + m1[1][1] * m2[1]);
+        public static mat2 operator *(mat2 m1, mat2 m2) => new mat2(glm._2.Select(j => new vec2(glm._2.Select(i => glm._2.Sum(k => m1[k, j] * m2[i, k])))));
 
         public static mat2 operator *(mat2 m, float f) => new mat2(m[0] * f, m[1] * f);
+
+        public static mat2 operator /(mat2 m, float f) => m * (1 / f);
+
+        public static implicit operator (vec2 a, vec2 b) (mat2 v) => (v[0], v[1]);
+
+        public static implicit operator mat2((vec2 a, vec2 b) t) => new mat2(t.a, t.b);
     }
 }
