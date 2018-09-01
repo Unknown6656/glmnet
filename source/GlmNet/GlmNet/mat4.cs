@@ -148,22 +148,46 @@ namespace GlmNet
       );
     }
 
-    /// <summary>
-    /// Multiplies the <paramref name="lhs"/> matrix by the <paramref name="rhs"/> matrix.
-    /// </summary>
-    /// <param name="lhs">The LHS matrix.</param>
-    /// <param name="rhs">The RHS matrix.</param>
-    /// <returns>The product of <paramref name="lhs"/> and <paramref name="rhs"/>.</returns>
-    public static mat4 operator *(mat4 lhs, mat4 rhs)
-    {
-      return new mat4(new[]
-      {
-          lhs[0][0] * rhs[0] + lhs[1][0] * rhs[1] + lhs[2][0] * rhs[2] + lhs[3][0] * rhs[3],
-          lhs[0][1] * rhs[0] + lhs[1][1] * rhs[1] + lhs[2][1] * rhs[2] + lhs[3][1] * rhs[3],
-          lhs[0][2] * rhs[0] + lhs[1][2] * rhs[1] + lhs[2][2] * rhs[2] + lhs[3][2] * rhs[3],
-          lhs[0][3] * rhs[0] + lhs[1][3] * rhs[1] + lhs[2][3] * rhs[2] + lhs[3][3] * rhs[3]
-            });
-    }
+        /// <summary>
+        /// Multiplies the <paramref name="lhs"/> matrix by the <paramref name="rhs"/> matrix.
+        /// </summary>
+        /// <param name="lhs">The LHS matrix.</param>
+        /// <param name="rhs">The RHS matrix.</param>
+        /// <returns>The product of <paramref name="lhs"/> and <paramref name="rhs"/>.</returns>
+        public static mat4 operator * (mat4 lhs, mat4 rhs)
+        {
+			//
+			// I'm not sure why this was supposed to work, but it doesn't.  Better to be explicit, as below.
+			//
+			//return new mat4(new []
+			//{
+			//	lhs[0][0] * rhs[0] + lhs[1][0] * rhs[1] + lhs[2][0] * rhs[2] + lhs[3][0] * rhs[3],
+			//	lhs[0][1] * rhs[0] + lhs[1][1] * rhs[1] + lhs[2][1] * rhs[2] + lhs[3][1] * rhs[3],
+			//	lhs[0][2] * rhs[0] + lhs[1][2] * rhs[1] + lhs[2][2] * rhs[2] + lhs[3][2] * rhs[3],
+			//	lhs[0][3] * rhs[0] + lhs[1][3] * rhs[1] + lhs[2][3] * rhs[2] + lhs[3][3] * rhs[3]
+			//});
+
+			return new mat4(new vec4[]
+			{
+				new vec4((lhs[0, 0] * rhs[0, 0]) + (lhs[1, 0] * rhs[0, 1]) + (lhs[2, 0] * rhs[0, 2]) + (lhs[3, 0] * rhs[0, 3]), 
+						 (lhs[0, 1] * rhs[0, 0]) + (lhs[1, 1] * rhs[0, 1]) + (lhs[2, 1] * rhs[0, 2]) + (lhs[3, 1] * rhs[0, 3]), 
+						 (lhs[0, 2] * rhs[0, 0]) + (lhs[1, 2] * rhs[0, 1]) + (lhs[2, 2] * rhs[0, 2]) + (lhs[3, 2] * rhs[0, 3]),
+						 (lhs[0, 3] * rhs[0, 0]) + (lhs[1, 3] * rhs[0, 1]) + (lhs[2, 3] * rhs[0, 2]) + (lhs[3, 3] * rhs[0, 3])), 
+				new vec4((lhs[0, 0] * rhs[1, 0]) + (lhs[1, 0] * rhs[1, 1]) + (lhs[2, 0] * rhs[1, 2]) + (lhs[3, 0] * rhs[1, 3]), 
+						 (lhs[0, 1] * rhs[1, 0]) + (lhs[1, 1] * rhs[1, 1]) + (lhs[2, 1] * rhs[1, 2]) + (lhs[3, 1] * rhs[1, 3]), 
+						 (lhs[0, 2] * rhs[1, 0]) + (lhs[1, 2] * rhs[1, 1]) + (lhs[2, 2] * rhs[1, 2]) + (lhs[3, 2] * rhs[1, 3]),
+						 (lhs[0, 3] * rhs[1, 0]) + (lhs[1, 3] * rhs[1, 1]) + (lhs[2, 3] * rhs[1, 2]) + (lhs[3, 3] * rhs[1, 3])), 
+				new vec4((lhs[0, 0] * rhs[2, 0]) + (lhs[1, 0] * rhs[2, 1]) + (lhs[2, 0] * rhs[2, 2]) + (lhs[3, 0] * rhs[2, 3]), 
+						 (lhs[0, 1] * rhs[2, 0]) + (lhs[1, 1] * rhs[2, 1]) + (lhs[2, 1] * rhs[2, 2]) + (lhs[3, 1] * rhs[2, 3]), 
+						 (lhs[0, 2] * rhs[2, 0]) + (lhs[1, 2] * rhs[2, 1]) + (lhs[2, 2] * rhs[2, 2]) + (lhs[3, 2] * rhs[2, 3]),
+						 (lhs[0, 3] * rhs[2, 0]) + (lhs[1, 3] * rhs[2, 1]) + (lhs[2, 3] * rhs[2, 2]) + (lhs[3, 3] * rhs[2, 3])),
+				new vec4((lhs[0, 0] * rhs[3, 0]) + (lhs[1, 0] * rhs[3, 1]) + (lhs[2, 0] * rhs[3, 2]) + (lhs[3, 0] * rhs[3, 3]), 
+						 (lhs[0, 1] * rhs[3, 0]) + (lhs[1, 1] * rhs[3, 1]) + (lhs[2, 1] * rhs[3, 2]) + (lhs[3, 1] * rhs[3, 3]), 
+						 (lhs[0, 2] * rhs[3, 0]) + (lhs[1, 2] * rhs[3, 1]) + (lhs[2, 2] * rhs[3, 2]) + (lhs[3, 2] * rhs[3, 3]),
+						 (lhs[0, 3] * rhs[3, 0]) + (lhs[1, 3] * rhs[3, 1]) + (lhs[2, 3] * rhs[3, 2]) + (lhs[3, 3] * rhs[3, 3]))
+			}
+			);
+        }
 
     public static mat4 operator *(mat4 lhs, float s)
     {

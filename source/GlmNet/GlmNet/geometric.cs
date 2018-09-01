@@ -53,6 +53,24 @@ namespace GlmNet
             float sqr = v.x * v.x + v.y * v.y + v.z * v.z + v.w * v.w;
             return v * (1.0f / (float)Math.Sqrt(sqr));
         }
+
+		public static float length(vec2 v)
+		{
+			float sqr = v.x * v.x + v.y * v.y;
+			return (float)Math.Sqrt(sqr);
+		}
+
+		public static float length(vec3 v)
+		{
+			float sqr = v.x * v.x + v.y * v.y + v.z * v.z;
+			return (float)Math.Sqrt(sqr);
+		}
+
+		public static float length(vec4 v)
+		{
+			float sqr = v.x * v.x + v.y * v.y + v.z * v.z + v.w * v.w;
+			return (float)Math.Sqrt(sqr);
+		}
     }
 
 // ReSharper restore InconsistentNaming

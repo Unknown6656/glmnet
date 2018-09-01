@@ -143,21 +143,37 @@ namespace GlmNet
       );
     }
 
-    /// <summary>
-    /// Multiplies the <paramref name="lhs"/> matrix by the <paramref name="rhs"/> matrix.
-    /// </summary>
-    /// <param name="lhs">The LHS matrix.</param>
-    /// <param name="rhs">The RHS matrix.</param>
-    /// <returns>The product of <paramref name="lhs"/> and <paramref name="rhs"/>.</returns>
-    public static mat3 operator *(mat3 lhs, mat3 rhs)
-    {
-      return new mat3(new[]
-      {
-          lhs[0][0] * rhs[0] + lhs[1][0] * rhs[1] + lhs[2][0] * rhs[2],
-          lhs[0][1] * rhs[0] + lhs[1][1] * rhs[1] + lhs[2][1] * rhs[2],
-          lhs[0][2] * rhs[0] + lhs[1][2] * rhs[1] + lhs[2][2] * rhs[2]
-            });
-    }
+        /// <summary>
+        /// Multiplies the <paramref name="lhs"/> matrix by the <paramref name="rhs"/> matrix.
+        /// </summary>
+        /// <param name="lhs">The LHS matrix.</param>
+        /// <param name="rhs">The RHS matrix.</param>
+        /// <returns>The product of <paramref name="lhs"/> and <paramref name="rhs"/>.</returns>
+        public static mat3 operator *(mat3 lhs, mat3 rhs)
+        {
+			// 
+			// This won't work.
+			//
+			//return new mat3(new[]
+			//{
+			//	lhs[0][0] * rhs[0] + lhs[1][0] * rhs[1] + lhs[2][0] * rhs[2],
+			//	lhs[0][1] * rhs[0] + lhs[1][1] * rhs[1] + lhs[2][1] * rhs[2],
+			//	lhs[0][2] * rhs[0] + lhs[1][2] * rhs[1] + lhs[2][2] * rhs[2]
+			//});
+
+			return new mat3(new vec3[]
+			{
+				new vec3((lhs[0, 0] * rhs[0, 0]) + (lhs[1, 0] * rhs[0, 1]) + (lhs[2, 0] * rhs[0, 2]), 
+						 (lhs[0, 1] * rhs[0, 0]) + (lhs[1, 1] * rhs[0, 1]) + (lhs[2, 1] * rhs[0, 2]), 
+						 (lhs[0, 2] * rhs[0, 0]) + (lhs[1, 2] * rhs[0, 1]) + (lhs[2, 2] * rhs[0, 2])), 
+				new vec3((lhs[0, 0] * rhs[1, 0]) + (lhs[1, 0] * rhs[1, 1]) + (lhs[2, 0] * rhs[1, 2]), 
+						 (lhs[0, 1] * rhs[1, 0]) + (lhs[1, 1] * rhs[1, 1]) + (lhs[2, 1] * rhs[1, 2]), 
+						 (lhs[0, 2] * rhs[1, 0]) + (lhs[1, 2] * rhs[1, 1]) + (lhs[2, 2] * rhs[1, 2])), 
+				new vec3((lhs[0, 0] * rhs[2, 0]) + (lhs[1, 0] * rhs[2, 1]) + (lhs[2, 0] * rhs[2, 2]), 
+						 (lhs[0, 1] * rhs[2, 0]) + (lhs[1, 1] * rhs[2, 1]) + (lhs[2, 1] * rhs[2, 2]), 
+						 (lhs[0, 2] * rhs[2, 0]) + (lhs[1, 2] * rhs[2, 1]) + (lhs[2, 2] * rhs[2, 2]))	
+			});
+        }
 
     public static mat3 operator *(mat3 lhs, float s)
     {

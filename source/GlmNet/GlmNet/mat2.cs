@@ -136,20 +136,31 @@ namespace GlmNet
       );
     }
 
-    /// <summary>
-    /// Multiplies the <paramref name="lhs"/> matrix by the <paramref name="rhs"/> matrix.
-    /// </summary>
-    /// <param name="lhs">The LHS matrix.</param>
-    /// <param name="rhs">The RHS matrix.</param>
-    /// <returns>The product of <paramref name="lhs"/> and <paramref name="rhs"/>.</returns>
-    public static mat2 operator *(mat2 lhs, mat2 rhs)
-    {
-      return new mat2(new[]
-      {
-          lhs[0][0] * rhs[0] + lhs[1][0] * rhs[1],
-          lhs[0][1] * rhs[0] + lhs[1][1] * rhs[1]
-            });
-    }
+        /// <summary>
+        /// Multiplies the <paramref name="lhs"/> matrix by the <paramref name="rhs"/> matrix.
+        /// </summary>
+        /// <param name="lhs">The LHS matrix.</param>
+        /// <param name="rhs">The RHS matrix.</param>
+        /// <returns>The product of <paramref name="lhs"/> and <paramref name="rhs"/>.</returns>
+        public static mat2 operator *(mat2 lhs, mat2 rhs)
+        {
+			//
+			// This won't work
+			//
+			//return new mat2(new[]
+			//{
+			//	lhs[0][0] * rhs[0] + lhs[1][0] * rhs[1],
+			//	lhs[0][1] * rhs[0] + lhs[1][1] * rhs[1]
+			//});
+
+			return new mat2(new vec2[]
+			{
+				new vec2((lhs[0, 0] * rhs[0, 0]) + (lhs[1, 0] * rhs[0, 1]), 
+						 (lhs[0, 1] * rhs[0, 0]) + (lhs[1, 1] * rhs[0, 1])), 
+				new vec2((lhs[0, 0] * rhs[1, 0]) + (lhs[1, 0] * rhs[1, 1]), 
+						 (lhs[0, 1] * rhs[1, 0]) + (lhs[1, 1] * rhs[1, 1]))	
+			});
+        }
 
     public static mat2 operator *(mat2 lhs, float s)
     {
