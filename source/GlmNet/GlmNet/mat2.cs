@@ -52,7 +52,25 @@ namespace GlmNet
 
         public bool IsInvertible => Math.Abs(Determinant) >= float.Epsilon;
 
-        public mat2 Inverse => this.inverse();
+        public mat2 Inverse
+        {
+            get
+            {
+                float idet = 1 / Determinant;
+
+                return new mat2(
+                    +this[1, 1] * idet,
+                    -this[0, 1] * idet,
+                    -this[1, 0] * idet,
+                    +this[0, 0] * idet
+                );
+            }
+        }
+
+
+        public static mat2 Zero { get; } = new mat2(0);
+
+        public static mat2 Identity { get; } = new mat2(1);
 
 
         /// <summary>
@@ -102,12 +120,14 @@ namespace GlmNet
         /// Creates an identity matrix.
         /// </summary>
         /// <returns>A new identity matrix.</returns>
+        [Obsolete("Use `mat2::Identity` instead.")]
         public static mat2 identity() => new mat2(1);
 
         /// <summary>
         /// Creates an zero matrix.
         /// </summary>
         /// <returns>A new zero matrix.</returns>
+        [Obsolete("Use `mat2::Zero` instead.")]
         public static mat2 zero() => new mat2(0);
 
 
@@ -144,6 +164,8 @@ namespace GlmNet
         public static mat2 operator +(mat2 m, float f) => m + new mat2(f);
 
         public static mat2 operator -(mat2 m1, mat2 m2) => m1 + -m2;
+
+        public static mat2 operator +(mat2 m1, mat2 m2) => new mat2(m1[0] + m2[0], m1[1] + m2[1]);
 
         /// <summary>
         /// Multiplies the <paramref name="m"/> matrix by the <paramref name="v"/> vector.

@@ -55,7 +55,30 @@ namespace GlmNet
 
         public bool IsInvertible => Math.Abs(Determinant) >= float.Epsilon;
 
-        public mat3 Inverse => this.inverse();
+        public mat3 Inverse
+        {
+            get
+            {
+                float idet = 1 / Determinant;
+
+                return new mat3(0)
+                {
+                    [0, 0] = +(this[1, 1] * this[2, 2] - this[2, 1] * this[1, 2]) * idet,
+                    [1, 0] = -(this[1, 0] * this[2, 2] - this[2, 0] * this[1, 2]) * idet,
+                    [2, 0] = +(this[1, 0] * this[2, 1] - this[2, 0] * this[1, 1]) * idet,
+                    [0, 1] = -(this[0, 1] * this[2, 2] - this[2, 1] * this[0, 2]) * idet,
+                    [1, 1] = +(this[0, 0] * this[2, 2] - this[2, 0] * this[0, 2]) * idet,
+                    [2, 1] = -(this[0, 0] * this[2, 1] - this[2, 0] * this[0, 1]) * idet,
+                    [0, 2] = +(this[0, 1] * this[1, 2] - this[1, 1] * this[0, 2]) * idet,
+                    [1, 2] = -(this[0, 0] * this[1, 2] - this[1, 0] * this[0, 2]) * idet,
+                    [2, 2] = +(this[0, 0] * this[1, 1] - this[1, 0] * this[0, 1]) * idet
+                };
+            }
+        }
+
+        public static mat3 Zero { get; } = new mat3(0);
+
+        public static mat3 Identity { get; } = new mat3(1);
 
 
         /// <summary>
@@ -117,13 +140,15 @@ namespace GlmNet
         /// Creates an identity matrix.
         /// </summary>
         /// <returns>A new identity matrix.</returns>
-        public static mat3 identity() => new mat3(1);
+        [Obsolete("Use `mat2::Identity` instead.")]
+        public static mat3 identity() => Identity;
 
         /// <summary>
         /// Creates an zero matrix.
         /// </summary>
         /// <returns>A new zero matrix.</returns>
-        public static mat3 zero() => new mat3(0);
+        [Obsolete("Use `mat2::Zero` instead.")]
+        public static mat3 zero() => Zero;
 
 
         /// <summary>
@@ -159,6 +184,8 @@ namespace GlmNet
         public static mat3 operator +(mat3 m, float f) => m + new mat3(f);
 
         public static mat3 operator -(mat3 m1, mat3 m2) => m1 + -m2;
+
+        public static mat3 operator +(mat3 m1, mat3 m2) => new mat3(m1[0] + m2[0], m1[1] + m2[1], m1[2] + m2[2]);
 
         /// <summary>
         /// Multiplies the <paramref name="m"/> matrix by the <paramref name="v"/> vector.

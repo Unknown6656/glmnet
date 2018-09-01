@@ -59,8 +59,8 @@ namespace GlmNet
         /// <returns></returns>
         public static mat4 lookAt(vec3 eye, vec3 center, vec3 up)
         {
-            vec3 f = new vec3(normalize(center - eye));
-            vec3 s = new vec3(normalize(cross(f, up)));
+            vec3 f = (center - eye).Normalized;
+            vec3 s = cross(f, up).Normalized;
             vec3 u = new vec3(cross(s, f));
 
             mat4 Result = new mat4(1)
@@ -183,7 +183,7 @@ namespace GlmNet
             if (delta.x <= 0 || delta.y <= 0)
                 throw new ArgumentOutOfRangeException();
 
-            mat4 res = mat4.identity();
+            mat4 res = mat4.Identity;
 
             if (!(delta.x > 0 && delta.y > 0))
                 return res; // Error
@@ -230,7 +230,7 @@ namespace GlmNet
         {
             float c = cos(angle);
             float s = sin(angle);
-            vec3 axis = normalize(v);
+            vec3 axis = v.Normalized;
             vec3 tmp = (1 - c) * axis;
 
             mat4 rot = new mat4(1)
@@ -256,7 +256,7 @@ namespace GlmNet
         }
 
         //  TODO: this is actually defined as an extension, put in the right file.
-        public static mat4 rotate(float angle, vec3 v) => rotate(mat4.identity(), angle, v);
+        public static mat4 rotate(float angle, vec3 v) => rotate(mat4.Identity, angle, v);
 
         /// <summary>
         /// Applies a scale transformation to matrix <paramref name="m"/> by vector <paramref name="v"/>.

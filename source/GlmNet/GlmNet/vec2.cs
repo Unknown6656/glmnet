@@ -1,6 +1,6 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
+using System;
 
 
 namespace GlmNet
@@ -38,6 +38,13 @@ namespace GlmNet
         public float Length => (float)Math.Sqrt(x * x + y * y);
 
         public vec2 Normalized => this / Length;
+
+
+        public static vec2 Zero { get; } = new vec2(0);
+
+        public static vec2 UnitX { get; } = (1, 0);
+
+        public static vec2 UnitY { get; } = (0, 1);
 
 
         public vec2(float s)

@@ -43,35 +43,11 @@ namespace GlmNet
         [Obsolete("Use `vec2::Length` instead.")]
         public static float length(this vec4 v) => v.Length;
 
-        public static mat2 inverse(this mat2 m)
-        {
-			float inv_det = 1 / m.Determinant;
+        [Obsolete("Use `mat2::Inverse` instead.")]
+        public static mat2 inverse(this mat2 m) => m.Inverse;
 
-			return new mat2(
-			    +m[1, 1] * inv_det,
-			    -m[0, 1] * inv_det,
-			    -m[1, 0] * inv_det,
-			    +m[0, 0] * inv_det
-			);
-        }
-
-        public static mat3 inverse(this mat3 m)
-        {
-            float inv_det = 1 / m.Determinant;
-
-            return new mat3(0)
-            {
-                [0, 0] = +(m[1, 1] * m[2, 2] - m[2, 1] * m[1, 2]) * inv_det,
-                [1, 0] = -(m[1, 0] * m[2, 2] - m[2, 0] * m[1, 2]) * inv_det,
-                [2, 0] = +(m[1, 0] * m[2, 1] - m[2, 0] * m[1, 1]) * inv_det,
-                [0, 1] = -(m[0, 1] * m[2, 2] - m[2, 1] * m[0, 2]) * inv_det,
-                [1, 1] = +(m[0, 0] * m[2, 2] - m[2, 0] * m[0, 2]) * inv_det,
-                [2, 1] = -(m[0, 0] * m[2, 1] - m[2, 0] * m[0, 1]) * inv_det,
-                [0, 2] = +(m[0, 1] * m[1, 2] - m[1, 1] * m[0, 2]) * inv_det,
-                [1, 2] = -(m[0, 0] * m[1, 2] - m[1, 0] * m[0, 2]) * inv_det,
-                [2, 2] = +(m[0, 0] * m[1, 1] - m[1, 0] * m[0, 1]) * inv_det
-            };
-        }
+        [Obsolete("Use `mat3::Inverse` instead.")]
+        public static mat3 inverse(this mat3 m) => m.Inverse;
 
         public static mat4 inverse(this in mat4 m)
 		{

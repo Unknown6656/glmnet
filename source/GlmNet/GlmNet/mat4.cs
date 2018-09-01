@@ -58,6 +58,11 @@ namespace GlmNet
         public mat4 Inverse => this.inverse();
 
 
+        public static mat4 Zero { get; } = new mat4(0);
+
+        public static mat4 Identity { get; } = new mat4(1);
+
+
         /// <summary>
         /// Initializes a new instance of the <see cref="mat4"/> struct.
         /// This matrix is the identity matrix scaled by <paramref name="scale"/>.
@@ -123,13 +128,15 @@ namespace GlmNet
         /// Creates an identity matrix.
         /// </summary>
         /// <returns>A new identity matrix.</returns>
-        public static mat4 identity() => new mat4(1);
+        [Obsolete("Use `mat2::Identity` instead.")]
+        public static mat4 identity() => Identity;
 
         /// <summary>
         /// Creates an zero matrix.
         /// </summary>
         /// <returns>A new zero matrix.</returns>
-        public static mat4 zero() => new mat4(0);
+        [Obsolete("Use `mat2::Zero` instead.")]
+        public static mat4 zero() => Zero;
 
         
         /// <summary>
@@ -165,6 +172,8 @@ namespace GlmNet
         public static mat4 operator +(mat4 m, float f) => m + new mat4(f);
 
         public static mat4 operator -(mat4 m1, mat4 m2) => m1 + -m2;
+
+        public static mat4 operator +(mat4 m1, mat4 m2) => new mat4(m1.cols.Zip(m2.cols, (v1, v2) => v1 + v2));
 
         /// <summary>
         /// Multiplies the <paramref name="m"/> matrix by the <paramref name="v"/> vector.
