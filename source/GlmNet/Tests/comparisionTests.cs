@@ -21,7 +21,7 @@ namespace Tests
       vec2 v2_2 = new vec2(1, 0);
       vec2 v2_3 = new vec2(0, 0);
       vec2 v2_1ref = v2_1;
-      v2_1ref.y = 1;
+      v2_1ref.Y = 1;
       Assert.AreEqual(v2_1.GetHashCode(), v2_2.GetHashCode(), "Error Hashcodes are not the Same");
       Assert.AreNotEqual(v2_1.GetHashCode(), v2_1ref.GetHashCode(), "Error Hashcodes are the Same");
       Assert.AreNotEqual(v2_1.GetHashCode(), v2_3.GetHashCode(), "Error Hashcodes are the Same");
