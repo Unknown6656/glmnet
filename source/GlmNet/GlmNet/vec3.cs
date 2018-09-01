@@ -38,7 +38,9 @@ namespace GlmNet
 
         public static int Dimension => 3;
 
-        public float Length => this.length();
+        public float Length => (float)Math.Sqrt(x * x + y * y + z * z);
+
+        public vec3 Normalized => this / Length;
 
 
         public vec3(float s)
@@ -79,8 +81,6 @@ namespace GlmNet
                 this[i] = v[i];
         }
 
-        public vec3 Normalize() => this.normalize();
-
         /// <inheritdoc/>
         public override bool Equals(object obj) => obj is vec3 vec && vec.x == x && vec.y == y && vec.z == z;
 
@@ -93,7 +93,7 @@ namespace GlmNet
         public override int GetHashCode() => x.GetHashCode() ^ y.GetHashCode() ^ z.GetHashCode();
 
 
-        public static vec3 operator ~(vec3 v) => v.Normalize();
+        public static vec3 operator ~(vec3 v) => v.Normalized;
 
         public static vec3 operator -(vec3 v) => v * -1;
 

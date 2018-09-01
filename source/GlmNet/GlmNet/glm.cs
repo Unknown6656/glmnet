@@ -8,12 +8,13 @@ namespace GlmNet
     {
         float this[int index] { set; get; }
         float Length { get; }
+        M Normalized { get; }
 
         float[] to_array();
-        M Normalize();
+        void from_array(params float[] v);
     }
 
-    public interface imat<M, V>
+    public interface imat<out M, V>
         where M : struct, imat<M, V>
         where V : struct, ivec<V>
     {
@@ -21,6 +22,7 @@ namespace GlmNet
         float this[int column, int row] { set; get; }
         float Determinant { get; }
         bool IsInvertible { get; }
+        M Inverse { get; }
 
         float[] to_array();
     }
@@ -32,11 +34,14 @@ namespace GlmNet
         internal static readonly int[] _4 = { 0, 1, 2, 3 };
 
 
-        public static float length(this vec2 v) => (float)Math.Sqrt(v.x * v.x + v.y * v.y);
+        [Obsolete("Use `vec2::Length` instead.")]
+        public static float length(this vec2 v) => v.Length;
 
-        public static float length(this vec3 v) => (float)Math.Sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
+        [Obsolete("Use `vec2::Length` instead.")]
+        public static float length(this vec3 v) => v.Length;
 
-        public static float length(this vec4 v) => (float)Math.Sqrt(v.x * v.x + v.y * v.y + v.z * v.z + v.w * v.w);
+        [Obsolete("Use `vec2::Length` instead.")]
+        public static float length(this vec4 v) => v.Length;
 
         public static mat2 inverse(this mat2 m)
         {
@@ -150,10 +155,13 @@ namespace GlmNet
             return tmp.x + tmp.y + tmp.z + tmp.w;
         }
 
-        public static vec2 normalize(this vec2 v) => v / length(v);
+        [Obsolete("Use `vec2::Normalized` instead.")]
+        public static vec2 normalize(this vec2 v) => v.Normalized;
 
-        public static vec3 normalize(this vec3 v) => v / length(v);
+        [Obsolete("Use `vec3::Normalized` instead.")]
+        public static vec3 normalize(this vec3 v) => v.Normalized;
 
-        public static vec4 normalize(this vec4 v) => v / length(v);
+        [Obsolete("Use `vec4::Normalized` instead.")]
+        public static vec4 normalize(this vec4 v) => v.Normalized;
     }
 }

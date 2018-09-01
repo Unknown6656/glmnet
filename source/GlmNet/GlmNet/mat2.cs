@@ -52,6 +52,8 @@ namespace GlmNet
 
         public bool IsInvertible => Math.Abs(Determinant) >= float.Epsilon;
 
+        public mat2 Inverse => this.inverse();
+
 
         /// <summary>
         /// Initializes a new instance of the <see cref="mat2"/> struct.
@@ -68,11 +70,7 @@ namespace GlmNet
         /// The matrix is initialised with the <paramref name="cols"/>.
         /// </summary>
         /// <param name="cols">The colums of the matrix.</param>
-        public mat2(IReadOnlyList<vec2> cols) => this.cols = new[]
-        {
-            cols[0],
-            cols[1]
-        };
+        public mat2(IEnumerable<vec2> cols) => this.cols = cols.Take(2).ToArray();
 
         public mat2(vec2 a, vec2 b)
             : this(new[] { a, b })
@@ -96,6 +94,8 @@ namespace GlmNet
 
         /// <inheritdoc/>
         public override int GetHashCode() => this[0].GetHashCode() ^ this[1].GetHashCode();
+
+        public float minor(int column, int row) => this[1 - column, 1 - row];
 
 
         /// <summary>

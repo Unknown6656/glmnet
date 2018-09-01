@@ -35,7 +35,9 @@ namespace GlmNet
 
         public static int Dimension => 2;
 
-        public float Length => this.length();
+        public float Length => (float)Math.Sqrt(x * x + y * y);
+
+        public vec2 Normalized => this / Length;
 
 
         public vec2(float s)
@@ -76,8 +78,6 @@ namespace GlmNet
 
         public float[] to_array() => new[] { x, y };
 
-        public vec2 Normalize() => this.normalize();
-
         /// <inheritdoc/>
         public override bool Equals(object obj) => obj is vec2 vec && vec.x == x && vec.y == y;
 
@@ -85,7 +85,7 @@ namespace GlmNet
         public override int GetHashCode() => x.GetHashCode() ^ y.GetHashCode();
 
 
-        public static vec2 operator ~(vec2 v) => v.Normalize();
+        public static vec2 operator ~(vec2 v) => v.Normalized;
 
         public static vec2 operator -(vec2 v) => v * -1;
 

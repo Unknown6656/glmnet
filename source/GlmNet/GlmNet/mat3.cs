@@ -55,6 +55,8 @@ namespace GlmNet
 
         public bool IsInvertible => Math.Abs(Determinant) >= float.Epsilon;
 
+        public mat3 Inverse => this.inverse();
+
 
         /// <summary>
         /// Initializes a new instance of the <see cref="mat3"/> struct.
@@ -102,7 +104,14 @@ namespace GlmNet
 
         /// <inheritdoc/>
         public override int GetHashCode() => this[0].GetHashCode() ^ this[1].GetHashCode() ^ this[2].GetHashCode();
-        
+
+        public mat2 minor(int column, int row)
+        {
+            vec3[] c = cols; // local copy because w/ever
+
+            return new mat2(glm._3.Except(new[] { column }).Select(j => new vec2(glm._3.Except(new[] { row }).Select(i => c[j][i]))));
+        }
+
 
         /// <summary>
         /// Creates an identity matrix.

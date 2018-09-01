@@ -50,6 +50,13 @@ namespace GlmNet
 
         public bool IsInvertible => Math.Abs(Determinant) >= float.Epsilon;
 
+        public float Determinant => minor(0, 0).Determinant
+                                  - minor(0, 1).Determinant
+                                  + minor(0, 2).Determinant
+                                  - minor(0, 3).Determinant;
+
+        public mat4 Inverse => this.inverse();
+
 
         /// <summary>
         /// Initializes a new instance of the <see cref="mat4"/> struct.
@@ -103,6 +110,13 @@ namespace GlmNet
                                              this[1].GetHashCode() ^
                                              this[2].GetHashCode() ^
                                              this[3].GetHashCode();
+
+        public mat3 minor(int column, int row)
+        {
+            vec4[] c = cols; // local copy because w/ever
+
+            return new mat3(glm._4.Except(new[] { column }).Select(j => new vec3(glm._4.Except(new[] { row }).Select(i => c[j][i]))));
+        }
 
 
         /// <summary>
