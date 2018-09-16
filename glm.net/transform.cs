@@ -65,18 +65,18 @@ namespace GlmNet
 
             mat4 Result = new mat4(1)
             {
-                [0, 0] = s.x,
-                [1, 0] = s.y,
-                [2, 0] = s.z,
-                [0, 1] = u.x,
-                [1, 1] = u.y,
-                [2, 1] = u.z,
-                [0, 2] = -f.x,
-                [1, 2] = -f.y,
-                [2, 2] = -f.z,
-                [3, 0] = -dot(s, eye),
-                [3, 1] = -dot(u, eye),
-                [3, 2] = dot(f, eye)
+                [0, 0] = s.X,
+                [1, 0] = s.Y,
+                [2, 0] = s.Z,
+                [0, 1] = u.X,
+                [1, 1] = u.Y,
+                [2, 1] = u.Z,
+                [0, 2] = -f.X,
+                [1, 2] = -f.Y,
+                [2, 2] = -f.Z,
+                [3, 0] = -s.Dot(eye),
+                [3, 1] = -u.Dot(eye),
+                [3, 2] = f.Dot(eye)
             };
 
             return Result;
@@ -180,23 +180,23 @@ namespace GlmNet
         /// <exception cref="ArgumentOutOfRangeException"></exception>
         public static mat4 pickMatrix(vec2 center, vec2 delta, vec4 viewport)
         {
-            if (delta.x <= 0 || delta.y <= 0)
+            if (delta.X <= 0 || delta.Y <= 0)
                 throw new ArgumentOutOfRangeException();
 
             mat4 res = mat4.Identity;
 
-            if (!(delta.x > 0 && delta.y > 0))
+            if (!(delta.X > 0 && delta.Y > 0))
                 return res; // Error
 
-            vec3 tmp = new vec3(
-                (viewport[2] - 2 * (center.x - viewport[0])) / delta.x,
-                (viewport[3] - 2 * (center.y - viewport[1])) / delta.y,
+            vec3 tmp = (
+                (viewport[2] - 2 * (center.X - viewport[0])) / delta.X,
+                (viewport[3] - 2 * (center.Y - viewport[1])) / delta.Y,
                 0
             );
             
             res = translate(res, tmp);
 
-            return scale(res, new vec3(viewport[2]/delta.x, viewport[3]/delta.y, 1));
+            return scale(res, (viewport[2] / delta.X, viewport[3] / delta.Y, 1));
         }
 
         /// <summary>
@@ -211,12 +211,12 @@ namespace GlmNet
         {
             vec4 tmp = proj * model * new vec4(obj, 1);
 
-            tmp /= tmp.w;
+            tmp /= tmp.W;
             tmp = tmp * .5f + .5f;
             tmp[0] = tmp[0] * viewport[2] + viewport[0];
             tmp[1] = tmp[1] * viewport[3] + viewport[1];
 
-            return new vec3(tmp.x, tmp.y, tmp.z);
+            return new vec3(tmp.X, tmp.Y, tmp.Z);
         }
 
         /// <summary>
@@ -330,13 +330,13 @@ namespace GlmNet
             mat4 inv = (proj * model).inverse();
             vec4 tmp = new vec4(win, 1f);
 
-            tmp.x = (tmp.x - viewport[0]) / viewport[2];
-            tmp.y = (tmp.y - viewport[1]) / viewport[3];
+            tmp.X = (tmp.X - viewport[0]) / viewport[2];
+            tmp.Y = (tmp.Y - viewport[1]) / viewport[3];
             tmp = tmp * 2 - 1;
 
             vec4 obj = inv * tmp;
             
-            return new vec3(obj /= obj.w);
+            return new vec3(obj /= obj.W);
         }
     }
 }

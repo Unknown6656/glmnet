@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "glm.net", "glm.net\glm.net.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTests", "UnitTests\UnitTests.csproj", "{B36FA440-731F-44AB-92E4-781A5B187C13}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RandomTests", "RandomTests\RandomTests.csproj", "{736C382F-8D84-4D57-8AD2-37C254825826}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -37,6 +39,18 @@ Global
 		{B36FA440-731F-44AB-92E4-781A5B187C13}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{B36FA440-731F-44AB-92E4-781A5B187C13}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{B36FA440-731F-44AB-92E4-781A5B187C13}.Release|Win32.ActiveCfg = Release|Any CPU
+		{736C382F-8D84-4D57-8AD2-37C254825826}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{736C382F-8D84-4D57-8AD2-37C254825826}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{736C382F-8D84-4D57-8AD2-37C254825826}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{736C382F-8D84-4D57-8AD2-37C254825826}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{736C382F-8D84-4D57-8AD2-37C254825826}.Debug|Win32.ActiveCfg = Debug|Any CPU
+		{736C382F-8D84-4D57-8AD2-37C254825826}.Debug|Win32.Build.0 = Debug|Any CPU
+		{736C382F-8D84-4D57-8AD2-37C254825826}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{736C382F-8D84-4D57-8AD2-37C254825826}.Release|Any CPU.Build.0 = Release|Any CPU
+		{736C382F-8D84-4D57-8AD2-37C254825826}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{736C382F-8D84-4D57-8AD2-37C254825826}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{736C382F-8D84-4D57-8AD2-37C254825826}.Release|Win32.ActiveCfg = Release|Any CPU
+		{736C382F-8D84-4D57-8AD2-37C254825826}.Release|Win32.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
