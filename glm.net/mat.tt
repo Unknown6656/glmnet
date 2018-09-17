@@ -1,5 +1,6 @@
-﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+﻿<#@ template debug="false" hostspecific="true" language="C#" #>
 <#@ assembly name="System.Core" #>
+<#@ import namespace="System.IO" #>
 <#@ import namespace="System.Linq" #>
 <#@ import namespace="System.Collections.Generic" #>
 <#@ output extension=".cs" #>
@@ -14,8 +15,22 @@ using System;
 
 namespace GlmNet
 {
+#if DOUBLE_PRECISION
+    using scalar = Double;
+#else
+    using scalar = Single;
+#endif
+
 <#
-	const int maxdim = 10;
+    int maxdim = 11;
+
+    try
+    {
+        string path = Host.ResolvePath("maxdim.txt");
+
+        maxdim = int.Parse(File.ReadAllText(path).Trim()) + 1;
+    }
+    catch { }
 
 	IEnumerable<int> r(int f, int t) => Enumerable.Range(f, t);
 
@@ -71,7 +86,7 @@ namespace GlmNet
         }
 		
         /// <inheritdoc/>
-        public float this[int column, int row]
+        public scalar this[int column, int row]
         {
             get => this[column][row];
             set
@@ -84,10 +99,10 @@ namespace GlmNet
         }
 		
         /// <inheritdoc/>
-        public bool IsInvertible => Math.Abs(Determinant) >= float.Epsilon;
+        public bool IsInvertible => Math.Abs(Determinant) >= scalar.Epsilon;
 		
         /// <inheritdoc/>
-        public bool IsSymetric => this == Transposed;
+        public bool IsSymmetric => this == Transposed;
 		
         /// <inheritdoc/>
         public bool IsProjection => this == this * this;
@@ -99,10 +114,13 @@ namespace GlmNet
         public bool IsOrthogonal => Inverse == Transposed;
 		
         /// <inheritdoc/>
-        public bool IsSkewSymetric => this == -Transposed;
+        public bool IsSkewSymmetric => this == -Transposed;
 		
         /// <inheritdoc/>
         public int Size => <#=typename#>.Dimension;
+		
+        /// <inheritdoc/>
+        public <#=vecname#> MainDiagonal => (<#=string.Join(", ", r(0, dim).Select(i => $"this[{i}, {i}]"))#>);
 		
         /// <inheritdoc/>
         public <#=vecname#>[] Columns => new[] { <#=string.Join(", ", cols)#> };
@@ -130,7 +148,7 @@ namespace GlmNet
         {
             get
             {
-			    float det = Determinant;
+			    scalar det = Determinant;
 
 				if (det.is_zero())
                     throw new InvalidOperationException("This matrix is not invertible, as its determinant is zero.");
@@ -151,7 +169,10 @@ namespace GlmNet
 		}
 		
         /// <inheritdoc/>
-        public float Determinant => this[0, 0] * this[1, 1] - this[1, 0] * this[0, 1];
+        public scalar Determinant => this[0, 0] * this[1, 1] - this[1, 0] * this[0, 1];
+
+        /// <inheritdoc/>
+        public poly CharacteristicPolynomial => new poly(Determinant, - this[0, 0] - this[1, 1], 1);
 <#
 		}
 		else if (dim == 3)
@@ -175,23 +196,106 @@ namespace GlmNet
 		}
 		
         /// <inheritdoc/>
-        public float Determinant => this[0, 0] * (this[1, 1] * this[2, 2] - this[2, 1] * this[1, 2])
+        public scalar Determinant => this[0, 0] * (this[1, 1] * this[2, 2] - this[2, 1] * this[1, 2])
 								  - this[1, 0] * (this[0, 1] * this[2, 2] - this[2, 1] * this[0, 2])
 								  + this[2, 0] * (this[0, 1] * this[1, 2] - this[1, 1] * this[0, 2]);
+
+		/*
+				 | a b c |					| a-λ  b   c  |
+			φ := | d e f |	   CP_φ(λ) = det|  d  e-λ  f  | = (a-λ)[MINOR @ 1,1] - λ(gc + db) - gbf - gce - dbi +dhc
+				 | g h i |					|  g   h  i-λ |
+		*/
+        /// <inheritdoc/>
+        public poly CharacteristicPolynomial => new poly(
+             this[1, 0] * this[2, 1] * this[0, 2] // -bgf
+           - this[0, 2] * this[2, 0] * this[1, 1] // -gce
+           - this[1, 0] * this[0, 1] * this[2, 2] // -dbi
+           + this[0, 1] * this[1, 2] * this[2, 0], //+dhc
+           - this[0, 2] * this[2, 0] // -gc
+           - this[0, 1] * this[1, 0] // -db
+        ) + ((this[0, 0] - poly.X) * Minor(0, 0).CharacteristicPolynomial);
 <#
 		}
 		else
 		{
 #>
-                throw new NotImplementedException();
+		        <#=typename#> m = this;
+			    <#=typename#> u = Identity;
+
+                for (int i = 0; i < Dimension; ++i)
+                {
+                    int max = i;
+
+                    for (int j = i + 1; j < Dimension; j++)
+                        if (Math.Abs(m[i, j]) > Math.Abs(m[i, max]))
+                            max = j;
+
+                    m = m.SwapRows(i, max);
+                    u = u.SwapRows(i, max);
+
+                    scalar top = 1 / m[i, i];
+
+                    if (scalar.IsInfinity(top))
+                        continue;
+					    
+                    u = u.MultiplyRow(i, top);
+                    m = m.MultiplyRow(i, top);
+                    m[i, i] = 1;
+
+                    for (int j = i + 1; j < Dimension; ++j)
+                    {
+                        scalar f = m[i, j];
+
+                        m = m.AddRows(i, j, -f);
+                        u = u.AddRows(i, j, -f);
+                    }
+                }
+
+                for (int i = Dimension - 1; i > 0; --i)
+                    if (!m[i, i].is_zero())
+                        for (int row = 0; row < i; ++row)
+                        {
+                            scalar f = m[i, row];
+
+                            m = m.AddRows(i, row, -f);
+                            u = u.AddRows(i, row, -f);
+                        }
+
+			    return u;
 			}
 		}
 		
         /// <inheritdoc/>
-        public float Determinant => <#=string.Join("\n\t\t\t\t\t\t\t\t\t", r(0, dim).Select(i => $"{((i % 2) == 0 ? '+' : '-')} Minor(0, {i}).Determinant"))#>;
+        public scalar Determinant => <#=string.Join("\n\t\t\t\t\t\t\t\t\t", r(0, dim).Select(i => $"{((i % 2) == 0 ? '+' : '-')} Minor(0, {i}).Determinant"))#>;
+
+        /// <inheritdoc/>
+        public poly CharacteristicPolynomial
+		{
+		    get
+			{
+			    if (IsUpperTriangular || IsLowerTriangular || IsDiagonal)
+				    ; // CP is linear product of the main diagonal and -λ
+
+			    throw new NotImplementedException();
+			}
+		}
 <#
 		}
 #>
+
+        /// <inheritdoc/>
+        public scalar[] Eigenvalues
+		{
+		    get
+			{
+				// TODO : maybe extra cases fro 2x2 or 3x3?
+
+			    if (IsUpperTriangular || IsLowerTriangular || IsDiagonal)
+				    return MainDiagonal.ToArray().Distinct().ToArray();
+
+			    throw new NotImplementedException();
+			}
+		}
 
         /// <inheritdoc/>
         public <#=typename#> OrthonormalBasis
@@ -205,7 +309,7 @@ namespace GlmNet
 					vs[i] = this[i];
 
 					for (int j = 0; j < i; ++ j)
-						vs[i] -= this[j].Dot(vs[j]) * vs[j];
+						vs[i] -= this[i].Dot(vs[j]) * vs[j];
 
 					vs[i] = vs[i].Normalized;
 				}
@@ -213,14 +317,48 @@ namespace GlmNet
                 return vs;
             }
         }
-		
-        /// <inheritdoc/>
-        public poly CharacteristicPolynomial => throw new NotImplementedException();
-		
-        /// <inheritdoc/>
-        public int Rank => throw new NotImplementedException();
 
+        /// <inheritdoc/>
+		public bool IsZero => this == Zero;
+
+        /// <inheritdoc/>
+		public bool IsIdentity => this == Identity;
+        
+		/// <inheritdoc/>
+		public bool IsDiagonal
+		{
+		    get
+			{
+				for (int c = 0; c < <#=dim#>; ++c)
+			        for (int r = 0; r < <#=dim#>; ++r)
+					    if ((r != c) && !this[c, r].is_zero())
+						    return false;
+
+				return true;
+			}
+		}
+        
+		/// <inheritdoc/>
+		public bool IsUpperTriangular
+		{
+		    get
+			{
+				for (int c = 0; c < <#=dim#>; ++c)
+			        for (int r = c + 1; r < <#=dim#>; ++r)
+					    if (!this[c, r].is_zero())
+						    return false;
+
+				return true;
+			}
+		}
+        
+		/// <inheritdoc/>
+		public bool IsLowerTriangular => Transposed.IsUpperTriangular;
 		
+        /// <inheritdoc/>
+        public int Rank => GetLinearIndependentForm().Rows.Count(c => c != <#=vecname#>.Zero);
+
+
         /// <inheritdoc cref="imat{M,V}.Size"/>
         public static int Dimension { get; } = <#=dim#>;
 		
@@ -235,7 +373,7 @@ namespace GlmNet
         public static <#=typename#> Identity { get; } = new <#=typename#>(1);
 
 
-        public <#=typename#>(float scale)
+        public <#=typename#>(scalar scale)
             : this(<#=string.Join(",\n\t\t\t\t   ", r(0, dim).Select(i => $"({string.Join(", ", r(0, dim).Select(j => j == i ? "scale" : "0"))})"))#>)
         {
         }
@@ -243,7 +381,7 @@ namespace GlmNet
         public <#=typename#>(IEnumerable<<#=vecname#>> cols)
 			: this() => FromArray(cols.Take(Dimension).ToArray());
 
-        public <#=typename#>(params float[] values)
+        public <#=typename#>(params scalar[] values)
 			: this() => FromArray(values.Take(Dimension * Dimension).ToArray());
 
         public <#=typename#>(<#=string.Join(", ", r(0, dim).Select(i => $"{vecname} v{i}"))#>)
@@ -259,17 +397,98 @@ namespace GlmNet
         }
 		
 
+
+		public <#=vecname#> Solve(<#=vecname#> v)
+		{
+		    <#=typename#> m = this;
+
+            for (int i = 0; i < Dimension; ++i)
+            {
+                int max = i;
+
+                for (int j = i + 1; j < Dimension; j++)
+                    if (Math.Abs(m[i, j]) > Math.Abs(m[i, max]))
+                        max = j;
+
+                m = m.SwapRows(i, max);
+                v = v.SwapEntries(i, max);
+
+                scalar top = 1 / m[i, i];
+
+                if (scalar.IsInfinity(top))
+                    continue;
+
+                v[i] *= top;
+                m = m.MultiplyRow(i, top);
+                m[i, i] = 1;
+
+                for (int j = i + 1; j < Dimension; ++j)
+                {
+                    scalar f = m[i, j];
+
+                    m = m.AddRows(i, j, -f);
+                    v[j] -= v[i] * f;
+                }
+            }
+
+            for (int i = Dimension - 1; i > 0; --i)
+                if (!m[i, i].is_zero())
+                    for (int row = 0; row < i; ++row)
+                    {
+                        scalar f = m[i, row];
+
+                        m = m.AddRows(i, row, -f);
+                        v[row] -= v[i] * f;
+                    }
+
+			return v;
+		}
+		
+		internal <#=typename#> GetLinearIndependentForm()
+		{
+		    <#=typename#> m = this;
+
+            for (int i = 0; i < Dimension; ++i)
+            {
+                int max = i;
+
+                for (int j = i + 1; j < Dimension; j++)
+                    if (Math.Abs(m[i, j]) > Math.Abs(m[i, max]))
+                        max = j;
+
+                m = m.SwapRows(i, max);
+
+                scalar top = 1 / m[i, i];
+
+                if (scalar.IsInfinity(top))
+                    continue;
+
+                m = m.MultiplyRow(i, top);
+                m[i, i] = 1;
+
+                for (int j = i + 1; j < Dimension; ++j)
+                {
+                    scalar f = m[i, j];
+
+                    m = m.AddRows(i, j, -f);
+                }
+            }
+
+			return m;
+		}
+
+
 		/* TODO : fix
         public (mat3 L, mat3 U) LUDecompose()
         {
             mat3 U = (mat3)Clone();
-            float k21 = U[0, 1] / U[0, 0];
-            float k31 = U[0, 2] / U[0, 0];
+            scalar k21 = U[0, 1] / U[0, 0];
+            scalar k31 = U[0, 2] / U[0, 0];
 
             U = U.Transform(new MatrixRowAdd<mat3, vec3>(0, 1, -k21));
             U = U.Transform(new MatrixRowAdd<mat3, vec3>(0, 2, -k31));
 
-            float k32 = U[1, 2] / U[1, 1];
+            scalar k32 = U[1, 2] / U[1, 1];
 
             U = U.Transform(new MatrixRowAdd<mat3, vec3>(1, 2, -k32));
 
@@ -290,7 +509,7 @@ namespace GlmNet
         }
 
         /// <inheritdoc/>
-        public void FromArray(float[] arr)
+        public void FromArray(scalar[] arr)
 		{
 		    if (arr is null)
 			    throw new ArgumentNullException(nameof(arr));
@@ -314,7 +533,7 @@ namespace GlmNet
 		}
 
         /// <inheritdoc/>
-        public float[] ToArray() => Columns.SelectMany(v => v.ToArray()).ToArray();
+        public scalar[] ToArray() => Columns.SelectMany(v => v.ToArray()).ToArray();
 <#
 		for (int i = 2; i <= dim - 1; ++i)
 		{
@@ -350,7 +569,7 @@ namespace GlmNet
         public mat<#=dim-1#> Minor(int column, int row) => new mat<#=dim-1#>(
 			Columns.Take(column).Concat(Columns.Skip(column + 1)).Select(v =>
 			{
-				float[] f = v.ToArray();
+				scalar[] f = v.ToArray();
 
 				return new vec<#=dim-1#>(f.Take(row).Concat(f.Skip(row + 1)));
 			}));
@@ -362,7 +581,7 @@ namespace GlmNet
 		public <#=typename#> AddColumns(int src_col, int dst_col) => AddColumns(src_col, dst_col, 1);
 		
         /// <inheritdoc/>
-		public <#=typename#> AddColumns(int src_col, int dst_col, float factor)
+		public <#=typename#> AddColumns(int src_col, int dst_col, scalar factor)
 		{
             <#=typename#> res = this;
 
@@ -375,7 +594,7 @@ namespace GlmNet
 		public <#=typename#> AddRows(int src_row, int dst_row) => AddRows(src_row, dst_row, 1);
 		
         /// <inheritdoc/>
-		public <#=typename#> AddRows(int src_row, int dst_row, float factor) => Transposed.AddColumns(src_row, dst_row, factor).Transposed;
+		public <#=typename#> AddRows(int src_row, int dst_row, scalar factor) => Transposed.AddColumns(src_row, dst_row, factor).Transposed;
 		
         /// <inheritdoc/>
 		public <#=typename#> SwapColumns(int src_col, int dst_col)
@@ -393,6 +612,22 @@ namespace GlmNet
 		public <#=typename#> SwapRows(int src_row, int dst_row) => Transposed.SwapColumns(src_row, dst_row).Transposed;
 
         /// <inheritdoc/>
+		public <#=typename#> MultiplyColumn(int col, scalar factor)
+		{
+            <#=vecname#>[] cols = Columns;
+
+            cols[col] *= factor;
+
+            return new <#=typename#>(cols);
+		}
+		
+        /// <inheritdoc/>
+		public <#=typename#> MultiplyRow(int row, scalar factor) => Transposed.MultiplyColumn(row, factor).Transposed;
+
+
+
+
+        /// <inheritdoc/>
         public override bool Equals(object obj) => obj is <#=typename#> mat<#=string.Concat(r(0, dim).Select(i => $" && mat[{i}] == this[{i}]"))#>;
 
         /// <inheritdoc/>
@@ -402,7 +637,7 @@ namespace GlmNet
 		/// The <#=dim#>x<#=dim#>-matrix' string representation
 		/// </summary>
 		/// <returns>String representation</returns>
-        public override string ToString() => string.Join("\n", Transposed.Columns.Select(c => $"| {string.Join(", ", c.ToArray().Select(f => $"{f,12:F8}"))} |"));
+        public override string ToString() => string.Join("\n", Transposed.Columns.Select(c => $"| {string.Join(", ", c.ToArray().Select(f => $"{f,22:F16}"))} |"));
 
 
         public static bool operator ==(<#=typename#> m1, <#=typename#> m2) => m1.Equals(m2);
@@ -413,13 +648,13 @@ namespace GlmNet
 
         public static <#=typename#> operator -(<#=typename#> m) => m * -1f;
 
-        public static <#=typename#> operator -(float f, <#=typename#> m) => new <#=typename#>(f) - m;
+        public static <#=typename#> operator -(scalar f, <#=typename#> m) => new <#=typename#>(f) - m;
 
-        public static <#=typename#> operator -(<#=typename#> m, float f) => m + -f;
+        public static <#=typename#> operator -(<#=typename#> m, scalar f) => m + -f;
 
-        public static <#=typename#> operator +(float f, <#=typename#> m) => m + f;
+        public static <#=typename#> operator +(scalar f, <#=typename#> m) => m + f;
 
-        public static <#=typename#> operator +(<#=typename#> m, float f) => m + new <#=typename#>(f);
+        public static <#=typename#> operator +(<#=typename#> m, scalar f) => m + new <#=typename#>(f);
 
         public static <#=typename#> operator -(<#=typename#> m1, <#=typename#> m2) => m1 + -m2;
 
@@ -435,13 +670,13 @@ namespace GlmNet
 			return new <#=typename#>(range.Select(j => new <#=vecname#>(range.Select(i => range.Sum(k => m1[k, j] * m2[i, k])))));
 		}
 
-        public static <#=typename#> operator *(<#=typename#> m, float f) => new <#=typename#>(<#=string.Join(", ", r(0, dim).Select(i => $"m[{i}] * f"))#>);
+        public static <#=typename#> operator *(<#=typename#> m, scalar f) => new <#=typename#>(<#=string.Join(", ", r(0, dim).Select(i => $"m[{i}] * f"))#>);
 
-        public static <#=typename#> operator /(<#=typename#> m, float f) => m * (1 / f);
+        public static <#=typename#> operator /(<#=typename#> m, scalar f) => m * (1 / f);
 <#
 		string _vecs = string.Join(", ", r(0, dim).Select(i => $"vec{dim} x{i}"));
-		string _scals = string.Join(", ", r(0, dim).Select(i => $"({string.Join(", ", r(0, dim).Select(j => $"float r{j}"))}) c{i}"));
-	    string _flats = string.Join(", ", r(0, dim).SelectMany(i => r(0, dim).Select(j => $"float x{i}{j}")));
+		string _scals = string.Join(", ", r(0, dim).Select(i => $"({string.Join(", ", r(0, dim).Select(j => $"scalar r{j}"))}) c{i}"));
+	    string _flats = string.Join(", ", r(0, dim).SelectMany(i => r(0, dim).Select(j => $"scalar x{i}{j}")));
 #>
 
         public static implicit operator (<#=_vecs#>) (<#=typename#> m) => (<#=string.Join(", ", r(0, dim).Select(i => $"m[{i}]"))#>);
@@ -476,11 +711,11 @@ namespace GlmNet
 
         public static explicit operator <#=vecname#>[](<#=typename#> m) => m.Columns;
 		
-        public static explicit operator float[](<#=typename#> m) => m.ToArray();
+        public static explicit operator scalar[](<#=typename#> m) => m.ToArray();
 		
         public static implicit operator <#=typename#>(<#=vecname#>[] arr) => new <#=typename#>(arr);
 
-        public static implicit operator <#=typename#>(float[] arr) => new <#=typename#>(arr);
+        public static implicit operator <#=typename#>(scalar[] arr) => new <#=typename#>(arr);
     }
 
 	#endregion

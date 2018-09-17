@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 
 using GlmNet;
 
@@ -26,28 +27,17 @@ namespace RandomTests
             //var r6 = p1 / p2;
 
             
-
-            mat3 mm = (
-                1, 0, 0,
-                0, 1, 0,
-                0, 0, 1
+            mat3 mat = (
+                1, 1, 1,
+                1, 0, 1,
+                1, 0, 1
             );
+            vec3 b = (0, 4, 2);
+            var x = mat.Solve(b);
 
-            var mm1 = mm.SwapRows(0, 1);
-            var mm2 = mm.AddRows(0, 1, -4);
+            var res = mat * x;
+            var c3 = b == res;
 
-
-            //var lu = mm.LUDecompose();
-            //var col = mm.CholeskyDecompose<mat3, vec3>();
-
-            //Console.WriteLine(col);
-
-
-            Console.WriteLine($"A:\n{mm}\n");
-            Console.WriteLine($"1:\n{mm1}\n");
-            Console.WriteLine($"2:\n{mm2}\n");
-            //Console.WriteLine($"C:\n{col}\n");
-            Console.ReadKey(true);
 
             return 0;
         }

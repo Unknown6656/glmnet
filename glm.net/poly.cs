@@ -7,13 +7,20 @@ using System;
 
 namespace GlmNet
 {
+#if DOUBLE_PRECISION
+    using scalar = Double;
+#else
+    using scalar = Single;
+#endif
+
+
     /// <summary>
     /// Represents a polynomial
     /// </summary>
-    public readonly struct poly
-        : IEnumerable<float>
+    public readonly partial struct poly
+        : IEnumerable<scalar>
     {
-        private readonly float[] _coeff;
+        private readonly scalar[] _coeff;
         
 
         /// <summary>
@@ -24,31 +31,29 @@ namespace GlmNet
         /// <summary>
         /// The polynomial's coefficient in ascending order
         /// </summary>
-        public ReadOnlyCollection<float> Coefficients => new ReadOnlyCollection<float>(_coeff);
+        public ReadOnlyCollection<scalar> Coefficients => new ReadOnlyCollection<scalar>(_coeff);
+
+        /// <summary>
+        /// The polynomial's leading coefficient
+        /// </summary>
+        public scalar LeadingCoefficient => _coeff[0];
 
         /// <summary>
         /// Evaluates the polynomial at the given X value
         /// </summary>
         /// <param name="x">X value</param>
         /// <returns>Polynomial value at X</returns>
-        public float this[float x]
-        {
-            get
-            {
-                float res = 0;
-                float _x = 1;
+        public scalar this[scalar x] => _coeff.Reverse().Aggregate((acc, c) => acc * x + c);
 
-                for (int i = 0; i < _coeff.Length; ++i)
-                {
-                    res += _coeff[i] * _x;
-                    _x *= x;
-                }
+        /// <summary>
+        /// Returns the roots of the polynomial (meaning all x-values, at which poly(x) is evaluated to zero)
+        /// </summary>
+        public IEnumerable<scalar> Roots => Solve(0);
 
-                return res;
-            }
-        }
-
-        public poly Derivative => (this << 1).Zip(Enumerable.Range(1, _coeff.Length), (f, i) => f * i).ToArray();
+        /// <summary>
+        /// The polynomial's derivative
+        /// </summary>
+        public poly Derivative => Degree > 0 ? (this << 1).Zip(Enumerable.Range(1, _coeff.Length), (f, i) => f * i).ToArray() : new scalar[0];
 
 
         /// <summary>
@@ -71,60 +76,60 @@ namespace GlmNet
         /// Creates a new polynomial using the given coefficients in ascending exponential order
         /// </summary>
         /// <param name="c">Polynomial coefficients</param>
-        public poly(params float[] c)
+        public poly(params scalar[] c)
         {
-            _coeff = (c ?? new float[0])
+            _coeff = (c ?? new scalar[0])
                     .Reverse()
                     .SkipWhile(glm.is_zero)
                     .Reverse()
                     .ToArray();
 
             if (_coeff.Length == 0)
-                _coeff = new[] { 0f };
+                _coeff = new scalar[] { 0 };
         }
 
         /// <inheritdoc />
-        public poly(IEnumerable<float> c)
+        public poly(IEnumerable<scalar> c)
             : this(c?.ToArray())
         {
         }
 
         /// <inheritdoc />
-        IEnumerator<float> IEnumerable<float>.GetEnumerator() => Coefficients.GetEnumerator();
+        IEnumerator<scalar> IEnumerable<scalar>.GetEnumerator() => Coefficients.GetEnumerator();
 
         /// <inheritdoc />
-        IEnumerator IEnumerable.GetEnumerator() => (this as IEnumerable<float>).GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => (this as IEnumerable<scalar>).GetEnumerator();
 
         /// <summary>
         /// Solves the current polynomial for any given y-value
         /// </summary>
         /// <param name="y">y-value</param>
         /// <returns>X-values</returns>
-        public IEnumerable<float> Solve(float y)
+        public IEnumerable<scalar> Solve(scalar y)
         {
             if (Degree == 0)
             {
                 if (_coeff[0].@is(y))
-                    foreach (float f in glm.AllNumbers())
+                    foreach (scalar f in glm.AllNumbers())
                         yield return f;
             }
             else if (Degree == 1)
                 yield return (y - _coeff[0]) / _coeff[1];
             else if (Degree == 2)
             {
-                double a = _coeff[2];
-                double b = _coeff[1];
-                double c = _coeff[0];
-                double q = b * b - 4 * a * c;
+                scalar a = _coeff[2];
+                scalar b = _coeff[1];
+                scalar c = _coeff[0];
+                scalar q = b * b - 4 * a * c;
 
-                if (q > -double.Epsilon)
+                if (q > -scalar.Epsilon)
                 {
-                    q = -.5 * Math.Sqrt(q);
+                    q = (scalar)(-.5 * Math.Sqrt(q));
 
-                    yield return (float)(q / a);
+                    yield return q / a;
 
-                    if (q >= double.Epsilon)
-                        yield return (float)(c / q);
+                    if (!q.is_zero())
+                        yield return c / q;
                 }
             }
             else if (Degree == 3)
@@ -135,6 +140,7 @@ namespace GlmNet
                 // y - d = (ax² + bx + c)x
                 // y - d = ((ax + b)x + c)x
 
+                throw new NotImplementedException();
             }
             else if (Degree == 4)
             {
@@ -144,17 +150,29 @@ namespace GlmNet
                 // y - e = (ax³ + bx² + cx + d)x
                 // y - e = ((ax² + bx + c)x + d)x
                 // y - e = (((ax + b)x + c)x + d)x
+
+                throw new NotImplementedException();
             }
             else
             {
-                
+                throw new NotImplementedException();
             }
         }
 
+        /// <summary>
+        /// Compares the given polynomial with the current instance and returns whether both are equal.
+        /// </summary>
+        /// <param name="obj">Second polynomial</param>
+        /// <returns>Comparison result</returns>
         public override bool Equals(object obj) => obj is poly p && _coeff.ZipOuter(p._coeff, glm.@is).All(b => b);
 
+        /// <inheritdoc/>
         public override int GetHashCode() => this.Aggregate(-Degree, (h, f) => h ^ f.GetHashCode());
 
+        /// <summary>
+        /// Returns the string representation of the current polynomial.
+        /// </summary>
+        /// <returns>String representation</returns>
         public override string ToString() => string.Join(" + ", this.Select((c, i) =>
         {
             if (c.is_zero())
@@ -175,9 +193,9 @@ namespace GlmNet
         }).Where(s => s.Length > 0).Reverse());
 
 
-        public static implicit operator poly(float f) => new poly(f);
+        public static implicit operator poly(scalar f) => new poly(f);
 
-        public static implicit operator poly(float[] c) => new poly(c);
+        public static implicit operator poly(scalar[] c) => new poly(c);
 
         public static poly operator +(poly p) => p;
 
@@ -187,9 +205,9 @@ namespace GlmNet
 
         public static poly operator -(poly p1, poly p2) => p1 + -p2;
 
-        public static poly operator *(float f, poly p) => p * f;
+        public static poly operator *(scalar f, poly p) => p * f;
 
-        public static poly operator *(poly p, float f) => p.Select(c => c * f).ToArray();
+        public static poly operator *(poly p, scalar f) => p.Select(c => c * f).ToArray();
 
         public static poly operator *(poly p1, poly p2) => p1.Select((c, i) => (p2 * c) >> i).Aggregate(Zero, (p, a) => p + a);
 
@@ -206,7 +224,7 @@ namespace GlmNet
             return r;
         }
 
-        public static poly operator /(poly p, float f) => p * (1 / f);
+        public static poly operator /(poly p, scalar f) => p * (1 / f);
 
         // public static poly operator /(poly p1, poly p2) => ;
 
@@ -216,7 +234,7 @@ namespace GlmNet
         /// <param name="p">Input polynomial</param>
         /// <param name="a">Increacement 'amount'</param>
         /// <returns>Output polynomial</returns>
-        public static poly operator >>(poly p, int a) => a < 0 ? p >> -a : a == 0 ? p :  Enumerable.Repeat(0f, a).Concat(p).ToArray();
+        public static poly operator >>(poly p, int a) => a < 0 ? p >> -a : a == 0 ? p :  Enumerable.Repeat((scalar)0, a).Concat(p).ToArray();
 
         /// <summary>
         /// <b>Decreaces</b> the polynomial's degree by the given amount <paramref name="a"/> (equivalent to multiplying it with X^-a)

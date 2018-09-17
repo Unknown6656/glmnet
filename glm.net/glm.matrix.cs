@@ -3,6 +3,13 @@
 
 namespace GlmNet
 {
+#if DOUBLE_PRECISION
+    using scalar = Double;
+#else
+    using scalar = Single;
+#endif
+
+
     /// <summary>
     /// Represents a generic vector
     /// </summary>
@@ -17,7 +24,7 @@ namespace GlmNet
         /// <param name="index">Coefficient index (zero-based)</param>
         /// <value>New coefficient value</value>
         /// <returns>Coefficient value</returns>
-        float this[int index] { set; get; }
+        scalar this[int index] { set; get; }
         /// <summary>
         /// The vector's dimension
         /// </summary>
@@ -25,7 +32,7 @@ namespace GlmNet
         /// <summary>
         /// The vector's eucledian length
         /// </summary>
-        float Length { get; }
+        scalar Length { get; }
         /// <summary>
         /// The eucledian normalized vector
         /// </summary>
@@ -36,7 +43,7 @@ namespace GlmNet
         /// </summary>
         /// <param name="other">Second vector</param>
         /// <returns>Dot product</returns>
-        float Dot(V other);
+        scalar Dot(V other);
         /// <summary>
         /// Returns whether the given vector is linear independent from the current one
         /// </summary>
@@ -46,12 +53,26 @@ namespace GlmNet
         /// Returns the array representation of the vector
         /// </summary>
         /// <returns>Flat array representation</returns>
-        float[] ToArray();
+        scalar[] ToArray();
+        /// <summary>
+        /// Converts the vector to its polynomial representation in ascending exponential order.
+        /// <para/>
+        /// The vector <code>(a,b,c,d, ...)</code> will be translated to the polynomial <code>a + bx + cx² + dx³ + ...</code>.
+        /// </summary>
+        /// <returns>Polynomial</returns>
+        poly ToPolynomial();
         /// <summary>
         /// Replaces the vector coefficients with the ones in the given array
         /// </summary>
         /// <param name="v">New vector coefficients</param>
-        void FromArray(params float[] v);
+        void FromArray(params scalar[] v);
+        /// <summary>
+        /// Swaps the coefficients stored at the given indices and returns the resulting vector
+        /// </summary>
+        /// <param name="src_idx">Source index (zero-based)</param>
+        /// <param name="dst_idx">Target index (zero-based)</param>
+        /// <returns>Vector with swapped coefficients</returns>
+        V SwapEntries(int src_idx, int dst_idx);
     }
 
     /// <summary>
@@ -77,11 +98,31 @@ namespace GlmNet
         /// <param name="row">Coefficient row index (zero-based)</param>
         /// <value>New coefficient value</value>
         /// <returns>Coefficient value</returns>
-        float this[int column, int row] { set; get; }
+        scalar this[int column, int row] { set; get; }
         /// <summary>
         /// The matrix' determinant
         /// </summary>
-        float Determinant { get; }
+        scalar Determinant { get; }
+        /// <summary>
+        /// Indicates whether the matrix is the zero <see cref="M"/>-matrix
+        /// </summary>
+        bool IsZero { get; }
+        /// <summary>
+        /// Indicates whether the matrix is the identity <see cref="M"/>-matrix
+        /// </summary>
+        bool IsIdentity { get; }
+        /// <summary>
+        /// Indicates whether the matrix is a diagonal matrix
+        /// </summary>
+        bool IsDiagonal { get; }
+        /// <summary>
+        /// Indicates whether the matrix is an upper (right) triangular matrix
+        /// </summary>
+        bool IsUpperTriangular { get; }
+        /// <summary>
+        /// Indicates whether the matrix is a lower (left) triangular matrix
+        /// </summary>
+        bool IsLowerTriangular { get; }
         /// <summary>
         /// Indicates whether the matrix is invertible, meaning that a multiplicative inverse exists
         /// </summary>
@@ -99,12 +140,28 @@ namespace GlmNet
         /// <summary>
         /// Indicates whether the matrix is skew symmetric
         /// </summary>
-        bool IsSkewSymetric { get; }
+        bool IsSkewSymmetric { get; }
         /// <summary>
         /// The matrix' characteristic polynomial
         /// </summary>
         poly CharacteristicPolynomial { get; }
+        /// <summary>
+        /// The matrix' main diagonal
+        /// </summary>
+        V MainDiagonal { get; }
+        /// <summary>
+        /// The matrix' column vectors
+        /// </summary>
         V[] Columns { get; }
+        /// <summary>
+        /// The matrix' row vectors
+        /// </summary>
+        V[] Rows { get; }
+        /// <summary>
+        /// The matrix' eigenvalues.
+        /// </summary>
+        // ∀λ∈Spec(A) : Ax = λx
+        scalar[] Eigenvalues { get; }
         /// <summary>
         /// The matrix' orthonormal basis
         /// </summary>
@@ -132,44 +189,46 @@ namespace GlmNet
         /// Returns the matrix as a flat array of matrix elements in column major format.
         /// </summary>
         /// <returns>Column major representation of the matrix</returns>
-        float[] ToArray();
+        scalar[] ToArray();
         void FromArray(V[] v);
-        void FromArray(float[] v);
+        void FromArray(scalar[] v);
+        M MultiplyRow(int row, scalar factor);
         M SwapRows(int src_row, int dst_row);
         M AddRows(int src_row, int dst_row);
-        M AddRows(int src_row, int dst_row, float factor);
+        M AddRows(int src_row, int dst_row, scalar factor);
+        M MultiplyColumn(int col, scalar factor);
         M SwapColumns(int src_row, int dst_row);
         M AddColumns(int src_col, int dst_col);
-        M AddColumns(int src_col, int dst_col, float factor);
+        M AddColumns(int src_col, int dst_col, scalar factor);
     }
 
     public static partial class glm
     {
         public static mat4 inverse(this in mat4 m)
 		{
-			float Coef00 = m[2, 2] * m[3, 3] - m[3, 2] * m[2, 3];
-			float Coef02 = m[1, 2] * m[3, 3] - m[3, 2] * m[1, 3];
-			float Coef03 = m[1, 2] * m[2, 3] - m[2, 2] * m[1, 3];
+			scalar Coef00 = m[2, 2] * m[3, 3] - m[3, 2] * m[2, 3];
+			scalar Coef02 = m[1, 2] * m[3, 3] - m[3, 2] * m[1, 3];
+			scalar Coef03 = m[1, 2] * m[2, 3] - m[2, 2] * m[1, 3];
 
-		    float Coef04 = m[2, 1] * m[3, 3] - m[3, 1] * m[2, 3];
-			float Coef06 = m[1, 1] * m[3, 3] - m[3, 1] * m[1, 3];
-			float Coef07 = m[1, 1] * m[2, 3] - m[2, 1] * m[1, 3];
+		    scalar Coef04 = m[2, 1] * m[3, 3] - m[3, 1] * m[2, 3];
+			scalar Coef06 = m[1, 1] * m[3, 3] - m[3, 1] * m[1, 3];
+			scalar Coef07 = m[1, 1] * m[2, 3] - m[2, 1] * m[1, 3];
 
-			float Coef08 = m[2, 1] * m[3, 2] - m[3, 1] * m[2, 2];
-			float Coef10 = m[1, 1] * m[3, 2] - m[3, 1] * m[1, 2];
-			float Coef11 = m[1, 1] * m[2, 2] - m[2, 1] * m[1, 2];
+			scalar Coef08 = m[2, 1] * m[3, 2] - m[3, 1] * m[2, 2];
+			scalar Coef10 = m[1, 1] * m[3, 2] - m[3, 1] * m[1, 2];
+			scalar Coef11 = m[1, 1] * m[2, 2] - m[2, 1] * m[1, 2];
 
-			float Coef12 = m[2, 0] * m[3, 3] - m[3, 0] * m[2, 3];
-			float Coef14 = m[1, 0] * m[3, 3] - m[3, 0] * m[1, 3];
-			float Coef15 = m[1, 0] * m[2, 3] - m[2, 0] * m[1, 3];
+			scalar Coef12 = m[2, 0] * m[3, 3] - m[3, 0] * m[2, 3];
+			scalar Coef14 = m[1, 0] * m[3, 3] - m[3, 0] * m[1, 3];
+			scalar Coef15 = m[1, 0] * m[2, 3] - m[2, 0] * m[1, 3];
 
-			float Coef16 = m[2, 0] * m[3, 2] - m[3, 0] * m[2, 2];
-			float Coef18 = m[1, 0] * m[3, 2] - m[3, 0] * m[1, 2];
-			float Coef19 = m[1, 0] * m[2, 2] - m[2, 0] * m[1, 2];
+			scalar Coef16 = m[2, 0] * m[3, 2] - m[3, 0] * m[2, 2];
+			scalar Coef18 = m[1, 0] * m[3, 2] - m[3, 0] * m[1, 2];
+			scalar Coef19 = m[1, 0] * m[2, 2] - m[2, 0] * m[1, 2];
 
-			float Coef20 = m[2, 0] * m[3, 1] - m[3, 0] * m[2, 1];
-			float Coef22 = m[1, 0] * m[3, 1] - m[3, 0] * m[1, 1];
-			float Coef23 = m[1, 0] * m[2, 1] - m[2, 0] * m[1, 1];
+			scalar Coef20 = m[2, 0] * m[3, 1] - m[3, 0] * m[2, 1];
+			scalar Coef22 = m[1, 0] * m[3, 1] - m[3, 0] * m[1, 1];
+			scalar Coef23 = m[1, 0] * m[2, 1] - m[2, 0] * m[1, 1];
 
 
 			vec4 Fac0 = new vec4(Coef00, Coef00, Coef02, Coef03);
@@ -196,7 +255,7 @@ namespace GlmNet
 			vec4 Row0 = new vec4(Inverse[0, 0], Inverse[1, 0], Inverse[2, 0], Inverse[3, 0]);
 
 			vec4 Dot0 = new vec4(m[0] * Row0);
-			float det = Dot0.X + Dot0.Y + (Dot0.Z + Dot0.W);
+			scalar det = Dot0.X + Dot0.Y + (Dot0.Z + Dot0.W);
             
 			return Inverse / det;
         }

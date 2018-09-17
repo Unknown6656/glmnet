@@ -2,6 +2,12 @@
 using System.Linq;
 using System;
 
+#if DOUBLE_PRECISION
+using scalar = System.Double;
+#else
+using scalar = System.Single;
+#endif
+
 
 namespace GlmNet
 {
@@ -19,21 +25,21 @@ namespace GlmNet
             return a.Zip(b, func);
         }
 
-        internal static IEnumerable<float> AllNumbers()
+        internal static IEnumerable<scalar> AllNumbers()
         {
-            float s = 0;
+            scalar s = 0;
 
             while (true)
             {
                 yield return s;
 
-                s = (1 - Math.Sign(s)) * (Math.Abs(s) + float.Epsilon * float.Epsilon);
+                s = (1 - Math.Sign(s)) * (Math.Abs(s) + scalar.Epsilon * scalar.Epsilon);
             }
         }
 
-        internal static IEnumerable<float> OpenInterval(float start, bool ascending = true)
+        internal static IEnumerable<scalar> OpenInterval(scalar start, bool ascending = true)
         {
-            const float ε = float.Epsilon * float.Epsilon;
+            const scalar ε = scalar.Epsilon * scalar.Epsilon;
 
             while (true)
             {

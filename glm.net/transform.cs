@@ -1,5 +1,11 @@
 ﻿using System;
 
+#if DOUBLE_PRECISION
+using scalar = System.Double;
+#else
+using scalar = System.Single;
+#endif
+
 
 namespace GlmNet
 {
@@ -15,7 +21,7 @@ namespace GlmNet
         /// <param name="nearVal">The near val.</param>
         /// <param name="farVal">The far val.</param>
         /// <returns></returns>
-        public static mat4 frustum(float left, float right, float bottom, float top, float nearVal, float farVal) => new mat4(1)
+        public static mat4 frustum(scalar left, scalar right, scalar bottom, scalar top, scalar nearVal, scalar farVal) => new mat4(1)
         {
             [0, 0] = 2.0f * nearVal / (right - left),
             [1, 1] = 2.0f * nearVal / (top - bottom),
@@ -34,11 +40,11 @@ namespace GlmNet
         /// <param name="aspect">The aspect.</param>
         /// <param name="zNear">The z near.</param>
         /// <returns></returns>
-        public static mat4 infinitePerspective(float fovy, float aspect, float zNear)
+        public static mat4 infinitePerspective(scalar fovy, scalar aspect, scalar zNear)
         {
-            float range = tan(fovy / 2f) * zNear;
-            float left = -range * aspect;
-            float right = range * aspect;
+            scalar range = tan(fovy / 2f) * zNear;
+            scalar left = -range * aspect;
+            scalar right = range * aspect;
 
             return new mat4
             {
@@ -92,7 +98,7 @@ namespace GlmNet
         /// <param name="zNear">The z near.</param>
         /// <param name="zFar">The z far.</param>
         /// <returns></returns>
-        public static mat4 ortho(float left, float right, float bottom, float top, float zNear, float zFar) => new mat4(1)
+        public static mat4 ortho(scalar left, scalar right, scalar bottom, scalar top, scalar zNear, scalar zFar) => new mat4(1)
         {
             [0, 0] = 2 / (right - left),
             [1, 1] = 2 / (top - bottom),
@@ -110,7 +116,7 @@ namespace GlmNet
         /// <param name="bottom">The bottom.</param>
         /// <param name="top">The top.</param>
         /// <returns></returns>
-        public static mat4 ortho(float left, float right, float bottom, float top) => new mat4(1)
+        public static mat4 ortho(scalar left, scalar right, scalar bottom, scalar top) => new mat4(1)
         {
             [0, 0] = 2 / (right - left),
             [1, 1] = 2 / (top - bottom),
@@ -127,9 +133,9 @@ namespace GlmNet
         /// <param name="zNear">The near depth clipping plane.</param>
         /// <param name="zFar">The far depth clipping plane.</param>
         /// <returns>A <see cref="mat4"/> that contains the projection matrix for the perspective transformation.</returns>
-        public static mat4 perspective(float fovy, float aspect, float zNear, float zFar)
+        public static mat4 perspective(scalar fovy, scalar aspect, scalar zNear, scalar zFar)
         {
-            float tanHalfFovy = (float)Math.Tan(fovy / 2);
+            scalar tanHalfFovy = (scalar)Math.Tan(fovy / 2);
 
             return new mat4(1)
             {
@@ -152,13 +158,13 @@ namespace GlmNet
         /// <param name="zFar">The z far.</param>
         /// <returns></returns>
         /// <exception cref="ArgumentOutOfRangeException"></exception>
-        public static mat4 perspectiveFov(float fov, float width, float height, float zNear, float zFar)
+        public static mat4 perspectiveFov(scalar fov, scalar width, scalar height, scalar zNear, scalar zFar)
         {
             if (width <= 0 || height <= 0 || fov <= 0)
                 throw new ArgumentOutOfRangeException();
             
-            float h = cos(fov / 2) / sin(fov / 2);
-            float w = h * height / width;
+            scalar h = cos(fov / 2) / sin(fov / 2);
+            scalar w = h * height / width;
 
             return new mat4(0)
             {
@@ -226,10 +232,10 @@ namespace GlmNet
         /// <param name="angle">The angle.</param>
         /// <param name="v">The v.</param>
         /// <returns></returns>
-        public static mat4 rotate(mat4 m, float angle, vec3 v)
+        public static mat4 rotate(mat4 m, scalar angle, vec3 v)
         {
-            float c = cos(angle);
-            float s = sin(angle);
+            scalar c = cos(angle);
+            scalar s = sin(angle);
             vec3 axis = v.Normalized;
             vec3 tmp = (1 - c) * axis;
 
@@ -256,7 +262,7 @@ namespace GlmNet
         }
 
         //  TODO: this is actually defined as an extension, put in the right file.
-        public static mat4 rotate(float angle, vec3 v) => rotate(mat4.Identity, angle, v);
+        public static mat4 rotate(scalar angle, vec3 v) => rotate(mat4.Identity, angle, v);
 
         /// <summary>
         /// Applies a scale transformation to matrix <paramref name="m"/> by vector <paramref name="v"/>.
@@ -299,13 +305,13 @@ namespace GlmNet
         /// <param name="aspect">The aspect.</param>
         /// <param name="zNear">The z near.</param>
         /// <returns></returns>
-        public static mat4 tweakedInfinitePerspective(float fovy, float aspect, float zNear)
+        public static mat4 tweakedInfinitePerspective(scalar fovy, scalar aspect, scalar zNear)
         {
-            float range = tan(fovy/2)*zNear;
-            float left = -range*aspect;
-            float right = range*aspect;
-            float bottom = -range;
-            float top = range;
+            scalar range = tan(fovy/2)*zNear;
+            scalar left = -range*aspect;
+            scalar right = range*aspect;
+            scalar bottom = -range;
+            scalar top = range;
 
             return new mat4(0f)
             {

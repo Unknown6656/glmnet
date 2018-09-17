@@ -18,7 +18,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;DOUBLE_PRECISION</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
@@ -46,6 +46,11 @@
   <ItemGroup>
     <Compile Include="glm.matrix.cs" />
     <Compile Include="glm.cs" />
+    <Compile Include="poly.extensions.cs">
+      <DependentUpon>poly.extensions.tt</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
     <Compile Include="mat.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -62,6 +67,11 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="maxdim.txt" />
+    <Content Include="poly.extensions.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>poly.extensions.cs</LastGenOutput>
+    </Content>
     <Content Include="vec.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>vec.cs</LastGenOutput>
