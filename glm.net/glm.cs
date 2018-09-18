@@ -1,5 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 using System;
+using System.Collections.Generic;
 
 
 namespace GlmNet
@@ -84,5 +85,70 @@ namespace GlmNet
 
         [Obsolete("Use `vec4::Normalized` instead.")]
         public static vec4 normalize(this vec4 v) => v.Normalized;
+
+        /// <summary>
+        /// Solves cubic polynomials; 
+        /// 'A' must not be zero
+        /// </summary>
+        internal static IEnumerable<(double r, double i)> SolveCardano(double A, double B, double C, double D)
+        {
+            if (!A.is_zero())
+            {
+                double root(double φ, double τ = 3)
+                {
+                    double i = φ < 0 ? -1 : 1;
+
+                    return i * Math.Exp(Math.Log(φ * i) / τ);
+                }
+
+                double a = B / A;
+                double u, v;
+
+                B = C / A;
+                C = D / A;
+
+                double a3 = a / -3;
+                double p = a * a3 + B;
+                double q = (2d / 27 * a * a * a) + B * a3 + C;
+
+                D = q * q / 4 + p * p * p / 27;
+
+                if (D.is_zero())
+                    D = 0;
+
+                if (D.is_zero())
+                {
+                    u = root(-q / 2);
+
+                    yield return (a3 + 2 * u, 0);
+                    yield return (a3 - u, 0);
+                }
+                else if (D > 0)
+                {
+                    u = root(-q / 2 + Math.Sqrt(D));
+                    v = root(-q / 2 - Math.Sqrt(D));
+
+                    var x2 = (real: -(u + v) / 2 + a3, imag: Math.Sqrt(3) / 2 * (u - v));
+
+                    yield return (u + v + a3, 0);
+                    yield return x2;
+                    yield return (x2.real, -x2.imag);
+                }
+                else
+                {
+                    double r = Math.Sqrt(-p * p * p / 27);
+                    double α = atan(Math.Sqrt(-D) / -q * 2);
+
+                    if (q > 0)
+                        α = 2.0 * Math.PI - α;
+
+                    double rr = root(r);
+
+                    yield return (rr * (cos((6 * Math.PI - α) / 3) + cos(α / 3.0)) + a3, 0);
+                    yield return (rr * (cos((2 * Math.PI + α) / 3) + cos((4 * Math.PI - α) / 3)) + a3, 0);
+                    yield return (rr * (cos((4 * Math.PI + α) / 3) + cos((2 * Math.PI - α) / 3)) + a3, 0);
+                }
+            }
+        }
     }
 }

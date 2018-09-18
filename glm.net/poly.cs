@@ -18,7 +18,10 @@ namespace GlmNet
     /// Represents a polynomial
     /// </summary>
     public readonly partial struct poly
-        : IEnumerable<scalar>
+        : iarithmeticfield<poly>
+        , IEnumerable<scalar>
+        , IEquatable<poly>
+        , ICloneable
     {
         private readonly scalar[] _coeff;
         
@@ -36,7 +39,7 @@ namespace GlmNet
         /// <summary>
         /// The polynomial's leading coefficient
         /// </summary>
-        public scalar LeadingCoefficient => _coeff[0];
+        public scalar LeadingCoefficient => _coeff.Length > 0 ? _coeff[_coeff.Length - 1] : 0;
 
         /// <summary>
         /// Evaluates the polynomial at the given X value
@@ -88,7 +91,10 @@ namespace GlmNet
                 _coeff = new scalar[] { 0 };
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Creates a new polynomial using the given coefficients in ascending exponential order
+        /// </summary>
+        /// <param name="c">Polynomial coefficients</param>
         public poly(IEnumerable<scalar> c)
             : this(c?.ToArray())
         {
@@ -100,6 +106,9 @@ namespace GlmNet
         /// <inheritdoc />
         IEnumerator IEnumerable.GetEnumerator() => (this as IEnumerable<scalar>).GetEnumerator();
 
+        /// <inheritdoc cref="this"/>
+        public scalar Evaluate(scalar x) => this[x];
+
         /// <summary>
         /// Solves the current polynomial for any given y-value
         /// </summary>
@@ -107,56 +116,69 @@ namespace GlmNet
         /// <returns>X-values</returns>
         public IEnumerable<scalar> Solve(scalar y)
         {
-            if (Degree == 0)
-            {
-                if (_coeff[0].@is(y))
-                    foreach (scalar f in glm.AllNumbers())
-                        yield return f;
-            }
-            else if (Degree == 1)
-                yield return (y - _coeff[0]) / _coeff[1];
-            else if (Degree == 2)
-            {
-                scalar a = _coeff[2];
-                scalar b = _coeff[1];
-                scalar c = _coeff[0];
-                scalar q = b * b - 4 * a * c;
+            scalar[] co = _coeff;
+            poly llc = this << 1;
+            int deg = Degree;
 
-                if (q > -scalar.Epsilon)
+            IEnumerable<scalar> __solve()
+            {
+                if (deg == 0)
                 {
-                    q = (scalar)(-.5 * Math.Sqrt(q));
+                    if (co[0].@is(y))
+                        foreach (scalar f in glm.AllNumbers())
+                            yield return f;
+                }
+                else if (deg == 1)
+                    yield return (y - co[0]) / co[1];
+                else if (co[0].@is(y))
+                {
+                    yield return 0;
 
-                    yield return q / a;
+                    foreach (scalar f in llc.Solve(y))
+                        yield return f;
+                }
+                else
+                {
+                    if (deg == 2)
+                    {
+                        scalar a = co[2];
+                        scalar b = co[1];
+                        scalar c = co[0] - y;
+                        scalar q = b * b - 4 * a * c;
 
-                    if (!q.is_zero())
-                        yield return c / q;
+                        if (q > -scalar.Epsilon)
+                        {
+                            q = (scalar)(-.5 * Math.Sqrt(q));
+
+                            yield return q / a;
+
+                            if (!q.is_zero())
+                                yield return c / q;
+                        }
+                    }
+                    else if (deg == 3)
+                        foreach ((double real, double imag) in glm.SolveCardano(co[3], co[2], co[1], co[0] - y))
+                        {
+                            if (imag.is_zero())
+                                yield return (scalar)real;
+                        }
+                    else if (deg == 4)
+                    {
+                        // solve for 
+                        // 0 = ax⁴ + bx³ + cx² + dx + e
+                        //   = (((ax + b)x + c)x + d)x + e
+
+                        throw new NotImplementedException();
+                    }
+                    else
+                    {
+                        throw new NotImplementedException();
+                    }
                 }
             }
-            else if (Degree == 3)
-            {
-                // y = f(x)
-                // y = ax³ + bx² + cx + d
-                // y - d = ax³ + bx² + cx
-                // y - d = (ax² + bx + c)x
-                // y - d = ((ax + b)x + c)x
 
-                throw new NotImplementedException();
-            }
-            else if (Degree == 4)
-            {
-                // y = f(x)
-                // y = ax⁴ + bx³ + cx² + dx + e
-                // y - e = ax⁴ + bx³ + cx² + dx
-                // y - e = (ax³ + bx² + cx + d)x
-                // y - e = ((ax² + bx + c)x + d)x
-                // y - e = (((ax + b)x + c)x + d)x
-
-                throw new NotImplementedException();
-            }
-            else
-            {
-                throw new NotImplementedException();
-            }
+            foreach (scalar x in __solve().Distinct())
+                yield return x;
         }
 
         /// <summary>
@@ -164,10 +186,20 @@ namespace GlmNet
         /// </summary>
         /// <param name="obj">Second polynomial</param>
         /// <returns>Comparison result</returns>
-        public override bool Equals(object obj) => obj is poly p && _coeff.ZipOuter(p._coeff, glm.@is).All(b => b);
+        public override bool Equals(object obj) => obj is poly p && Equals(p);
 
         /// <inheritdoc/>
         public override int GetHashCode() => this.Aggregate(-Degree, (h, f) => h ^ f.GetHashCode());
+
+        /// <inheritdoc/>
+        public object Clone() => new poly(_coeff as IEnumerable<scalar>);
+
+        /// <summary>
+        /// Compares the given polynomial with the current instance and returns whether both are equal.
+        /// </summary>
+        /// <param name="other">Second polynomial</param>
+        /// <returns>Comparison result</returns>
+        public bool Equals(poly other) => _coeff.ZipOuter(other._coeff, glm.@is).All(b => b);
 
         /// <summary>
         /// Returns the string representation of the current polynomial.
@@ -190,27 +222,147 @@ namespace GlmNet
                 return cstr + "x";
             else
                 return $"{cstr}x{glm.ToSuperScript(i)}";
-        }).Where(s => s.Length > 0).Reverse());
+        }).Where(s => s.Length > 0).Reverse()).Replace("+ -", "- ");
+
+        /// <summary>
+        /// Divides the two given polynomials using polynomial long division and returns the division result
+        /// </summary>
+        /// <param name="x">First polynomial</param>
+        /// <param name="y">Second polynomial</param>
+        /// <returns>Divison quotient and remainder</returns>
+        public static (poly Quotient, poly Remainder) PolynomialDivision(poly x, poly y)
+        {
+            int nd = x.Degree;
+            int dd = y.Degree;
+
+            if (dd < 0)
+                throw new ArgumentException("Divisor must have at least one one-zero coefficient");
+
+            if (nd < dd)
+                throw new ArgumentException("The degree of the divisor cannot exceed that of the numerator");
+
+            poly r = (poly)x.Clone();
+            scalar[] q = new scalar[nd * 2];
+
+            while (nd >= dd)
+            {
+                poly d2 = y >> (nd - dd);
+
+                q[nd - dd] = r[nd] / d2[nd];
+
+                d2 *= q[nd - dd];
+                r -= d2;
+
+                nd = r.Degree;
+            }
+
+            return (q, r);
+        }
+
+        /// <inheritdoc/>
+        public poly Add(poly second) => this + second;
+
+        /// <inheritdoc/>
+        public poly Negate(poly second) => -this;
+
+        /// <inheritdoc/>
+        public poly Subtract(poly second) => this - second;
+
+        /// <inheritdoc/>
+        public poly Multiply(poly second) => this * second;
+
+        /// <inheritdoc/>
+        public poly Multiply(scalar factor) => this * factor;
 
 
+        /// <summary>
+        /// Implicitly converts the given scalar to a polynomial of degree zero.
+        /// </summary>
+        /// <param name="f">Scalar</param>
         public static implicit operator poly(scalar f) => new poly(f);
 
+        /// <summary>
+        /// Implicitly converts the given array of scalar coefficients to their respective polynomial representation.
+        /// </summary>
+        /// <param name="c">Scalar coefficients</param>
         public static implicit operator poly(scalar[] c) => new poly(c);
 
-        public static poly operator +(poly p) => p;
+        /// <summary>
+        /// Compares the two given polynomials and returns whether both are equal.
+        /// </summary>
+        /// <param name="p1">Second polynomial</param>
+        /// <param name="p2">Second polynomial</param>
+        /// <returns>Comparison result</returns>
+        public static bool operator ==(poly p1, poly p2) => p1.Equals(p2);
 
+        /// <summary>
+        /// Compares the two given polynomials and returns whether both are not equal to each other.
+        /// </summary>
+        /// <param name="p1">Second polynomial</param>
+        /// <param name="p2">Second polynomial</param>
+        /// <returns>Comparison result</returns>
+        public static bool operator !=(poly p1, poly p2) => !(p1 == p2);
+
+        /// <summary>
+        /// Represents the identity-function
+        /// </summary>
+        /// <param name="p">Polynomial</param>
+        /// <returns>Unchanged polynomial</returns>
+        public static poly operator +(poly p) => p;
+        
+        /// <summary>
+        /// Negates the given polynomial by negating each coefficient
+        /// </summary>
+        /// <param name="p">Polynomial</param>
+        /// <returns>Negated polynomial</returns>
         public static poly operator -(poly p) => p.Select(c => -c).ToArray();
 
+        /// <summary>
+        /// Performs the addition of two polynomials by adding their respective coefficients.
+        /// </summary>
+        /// <param name="p1">First polynomial</param>
+        /// <param name="p2">Second polynomial</param>
+        /// <returns>Addition result</returns>
         public static poly operator +(poly p1, poly p2) => p1._coeff.ZipOuter(p2._coeff, (c1, c2) => c1 + c2).ToArray();
 
+        /// <summary>
+        /// Performs the subtraction of two polynomials by subtracting their respective coefficients.
+        /// </summary>
+        /// <param name="p1">First polynomial</param>
+        /// <param name="p2">Second polynomial</param>
+        /// <returns>Subtraction result</returns>
         public static poly operator -(poly p1, poly p2) => p1 + -p2;
 
+        /// <summary>
+        /// Performs the multiplication of a polynomial with a single scalar. All of the polynomial's coefficients will be multiplied by the scalar
+        /// </summary>
+        /// <param name="f">Scalar</param>
+        /// <param name="p">Polynomial</param>
+        /// <returns>Multiplication result</returns>
         public static poly operator *(scalar f, poly p) => p * f;
 
+        /// <summary>
+        /// Performs the multiplication of a polynomial with a single scalar. All of the polynomial's coefficients will be multiplied by the scalar
+        /// </summary>
+        /// <param name="f">Scalar</param>
+        /// <param name="p">Polynomial</param>
+        /// <returns>Multiplication result</returns>
         public static poly operator *(poly p, scalar f) => p.Select(c => c * f).ToArray();
 
+        /// <summary>
+        /// Performs the multiplication of two polynomials.
+        /// </summary>
+        /// <param name="p1">First polynomial</param>
+        /// <param name="p2">Second polynomial</param>
+        /// <returns>Multiplication result</returns>
         public static poly operator *(poly p1, poly p2) => p1.Select((c, i) => (p2 * c) >> i).Aggregate(Zero, (p, a) => p + a);
 
+        /// <summary>
+        /// Raises the given polynomial to the given (non-negative) power
+        /// </summary>
+        /// <param name="p">Polynomial</param>
+        /// <param name="e">Exponent</param>
+        /// <returns>Result</returns>
         public static poly operator ^(poly p, int e)
         {
             if (e < 0)
@@ -224,9 +376,29 @@ namespace GlmNet
             return r;
         }
 
+        /// <summary>
+        /// Performs the scalar division by dividing each of the given polynomial's coefficient by the given scalar value.
+        /// </summary>
+        /// <param name="p">Polynomial</param>
+        /// <param name="f">Scalar divisor</param>
+        /// <returns>Division result</returns>
         public static poly operator /(poly p, scalar f) => p * (1 / f);
 
-        // public static poly operator /(poly p1, poly p2) => ;
+        /// <summary>
+        /// Performs the polynomial long division and returns the quotient
+        /// </summary>
+        /// <param name="p1">First polynomial</param>
+        /// <param name="p2">Second polynomial</param>
+        /// <returns>Quotient</returns>
+        public static poly operator /(poly p1, poly p2) => p2.Degree == 0 ? p1 / p2[0] : PolynomialDivision(p1, p2).Quotient;
+
+        /// <summary>
+        /// Performs the polynomial long division and returns the remainder
+        /// </summary>
+        /// <param name="p1">First polynomial</param>
+        /// <param name="p2">Second polynomial</param>
+        /// <returns>Remainder</returns>
+        public static poly operator %(poly p1, poly p2) => p1 == p2 ? 0 : PolynomialDivision(p1, p2).Remainder;
 
         /// <summary>
         /// <b>Increaces</b> the polynomial's degree by the given amount <paramref name="a"/> (equivalent to multiplying it with X^a)

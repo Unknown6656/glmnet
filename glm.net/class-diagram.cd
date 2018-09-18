@@ -1,0 +1,54 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1" MembersFormat="FullSignature">
+  <Struct Name="GlmNet.poly">
+    <Position X="11.5" Y="1.25" Width="4.25" />
+    <TypeIdentifier>
+      <HashCode>CAYAAAAAEAAAAAAE6AULAwAYAUIBAICEAgAEAAAAQrI=</HashCode>
+      <FileName>poly.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Struct>
+  <Interface Name="GlmNet.iarithmeticfield&lt;T&gt;">
+    <Position X="5.5" Y="0.5" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>AAIAAAAAAAAAAAAAAAADAAAAAAAAAAAAAAAEAAAAAAA=</HashCode>
+      <FileName>glm.matrix.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="GlmNet.imat">
+    <Position X="8.5" Y="0.5" Width="2.75" />
+    <TypeIdentifier>
+      <HashCode>AACBAACgBAAAgEAgCAAAECAAAgIACCAAAAAAACBAACA=</HashCode>
+      <FileName>glm.matrix.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="GlmNet.imat&lt;M, V&gt;">
+    <Position X="8.5" Y="5.5" Width="2.75" />
+    <TypeIdentifier>
+      <HashCode>AAAACAAAAAAAAEAACAAAAAAIAgIAAAAAAAAAAAgAAAA=</HashCode>
+      <FileName>glm.matrix.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="GlmNet.imat&lt;M&gt;">
+    <Position X="5" Y="3.5" Width="3.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAIAAAAAAAIhAAAAAAAAAIAAAAAAAAAABRI=</HashCode>
+      <FileName>glm.matrix.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="GlmNet.ivec">
+    <Position X="2.25" Y="0.5" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAgAAACAAAAABAAoAAAAAAAAAAAABAAAA=</HashCode>
+      <FileName>glm.matrix.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="GlmNet.ivec&lt;V&gt;">
+    <Position X="2.25" Y="3.5" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAEAAAAAAAAAAAAACAAACAAAAAAAAAAAAAAAAQA=</HashCode>
+      <FileName>glm.matrix.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

@@ -11,20 +11,24 @@ namespace GlmNet
 
 
     /// <summary>
-    /// Represents a generic vector
+    /// Represents a generic arithmetic field with a notion of addition and scalar multiplication
     /// </summary>
-    /// <typeparam name="V">Generic vector type</typeparam>
-    public interface ivec<V>
-        : IComparable<V>
-        where V : struct, ivec<V>
+    /// <typeparam name="T">Generic field type</typeparam>
+    public interface iarithmeticfield<T>
+        where T : struct, iarithmeticfield<T>
     {
-        /// <summary>
-        /// Sets or gets the vector's coefficient at the given index
-        /// </summary>
-        /// <param name="index">Coefficient index (zero-based)</param>
-        /// <value>New coefficient value</value>
-        /// <returns>Coefficient value</returns>
-        scalar this[int index] { set; get; }
+        T Add(T second);
+        T Negate(T second);
+        T Subtract(T second);
+        T Multiply(T second);
+        T Multiply(scalar factor);
+    }
+
+    /// <summary>
+    /// Represents a vector
+    /// </summary>
+    public interface ivec
+    {
         /// <summary>
         /// The vector's dimension
         /// </summary>
@@ -34,21 +38,13 @@ namespace GlmNet
         /// </summary>
         scalar Length { get; }
         /// <summary>
-        /// The eucledian normalized vector
+        /// Sets or gets the vector's coefficient at the given index
         /// </summary>
-        V Normalized { get; }
+        /// <param name="index">Coefficient index (zero-based)</param>
+        /// <value>New coefficient value</value>
+        /// <returns>Coefficient value</returns>
+        scalar this[int index] { set; get; }
 
-        /// <summary>
-        /// Calculates the dot product (aka. scalar product) of the current vector and the given one
-        /// </summary>
-        /// <param name="other">Second vector</param>
-        /// <returns>Dot product</returns>
-        scalar Dot(V other);
-        /// <summary>
-        /// Returns whether the given vector is linear independent from the current one
-        /// </summary>
-        /// <param name="other">Second vector</param>
-        bool IsLinearIndependent(V other);
         /// <summary>
         /// Returns the array representation of the vector
         /// </summary>
@@ -66,6 +62,34 @@ namespace GlmNet
         /// </summary>
         /// <param name="v">New vector coefficients</param>
         void FromArray(params scalar[] v);
+    }
+
+    /// <summary>
+    /// Represents a generic vector
+    /// </summary>
+    /// <typeparam name="V">Generic vector type</typeparam>
+    public interface ivec<V>
+        : ivec
+        , iarithmeticfield<V>
+        , IComparable<V>
+        where V : struct, ivec<V>
+    {
+        /// <summary>
+        /// The eucledian normalized vector
+        /// </summary>
+        V Normalized { get; }
+
+        /// <summary>
+        /// Calculates the dot product (aka. scalar product) of the current vector and the given one
+        /// </summary>
+        /// <param name="other">Second vector</param>
+        /// <returns>Dot product</returns>
+        scalar Dot(V other);
+        /// <summary>
+        /// Returns whether the given vector is linear independent from the current one
+        /// </summary>
+        /// <param name="other">Second vector</param>
+        bool IsLinearIndependent(V other);
         /// <summary>
         /// Swaps the coefficients stored at the given indices and returns the resulting vector
         /// </summary>
@@ -76,21 +100,10 @@ namespace GlmNet
     }
 
     /// <summary>
-    /// Represents a generic square matrix
+    /// Represents a square matrix
     /// </summary>
-    /// <typeparam name="M">Generic matrix type</typeparam>
-    /// <typeparam name="V">Generic underlying vector type</typeparam>
-    public interface imat<M, V>
-        where M : imat<M, V>
-        where V : struct, ivec<V>
+    public interface imat
     {
-        /// <summary>
-        /// Sets or gets the matrix' column vector at the given index
-        /// </summary>
-        /// <param name="column">Column vector index (zero-based)</param>
-        /// <value>New column vector</value>
-        /// <returns>Column vector</returns>
-        V this[int column] { set; get; }
         /// <summary>
         /// Sets or gets the vector's coefficient at the given index
         /// </summary>
@@ -146,22 +159,36 @@ namespace GlmNet
         /// </summary>
         poly CharacteristicPolynomial { get; }
         /// <summary>
-        /// The matrix' main diagonal
-        /// </summary>
-        V MainDiagonal { get; }
-        /// <summary>
-        /// The matrix' column vectors
-        /// </summary>
-        V[] Columns { get; }
-        /// <summary>
-        /// The matrix' row vectors
-        /// </summary>
-        V[] Rows { get; }
-        /// <summary>
         /// The matrix' eigenvalues.
         /// </summary>
         // ∀λ∈Spec(A) : Ax = λx
         scalar[] Eigenvalues { get; }
+        /// <summary>
+        /// The rank of the matrix
+        /// </summary>
+        int Rank { get; }
+        /// <summary>
+        /// The matrix dimension (= side length)
+        /// </summary>
+        int Size { get; }
+
+        /// <summary>
+        /// Returns the matrix as a flat array of matrix elements in column major format.
+        /// </summary>
+        /// <returns>Column major representation of the matrix</returns>
+        scalar[] ToArray();
+        void FromArray(scalar[] v);
+    }
+
+    /// <summary>
+    /// Represents a generic square matrix
+    /// </summary>
+    /// <typeparam name="M">Generic matrix type</typeparam>
+    public interface imat<M>
+        : imat
+        , iarithmeticfield<M>
+        where M : struct, imat<M>
+    {
         /// <summary>
         /// The matrix' orthonormal basis
         /// </summary>
@@ -174,24 +201,7 @@ namespace GlmNet
         /// The multiplicative inverse matrix
         /// </summary>
         M Inverse { get; }
-        /// <summary>
-        /// The rank of the matrix
-        /// </summary>
-        int Rank { get; }
-        /// <summary>
-        /// The matrix dimension (= side length)
-        /// </summary>
-        int Size { get; }
 
-        (M U, M D) IwasawaDecompose();
-
-        /// <summary>
-        /// Returns the matrix as a flat array of matrix elements in column major format.
-        /// </summary>
-        /// <returns>Column major representation of the matrix</returns>
-        scalar[] ToArray();
-        void FromArray(V[] v);
-        void FromArray(scalar[] v);
         M MultiplyRow(int row, scalar factor);
         M SwapRows(int src_row, int dst_row);
         M AddRows(int src_row, int dst_row);
@@ -200,6 +210,42 @@ namespace GlmNet
         M SwapColumns(int src_row, int dst_row);
         M AddColumns(int src_col, int dst_col);
         M AddColumns(int src_col, int dst_col, scalar factor);
+    }
+
+    /// <summary>
+    /// Represents a generic square matrix
+    /// </summary>
+    /// <typeparam name="M">Generic matrix type</typeparam>
+    /// <typeparam name="V">Generic underlying vector type</typeparam>
+    public interface imat<M, V>
+        : imat<M>
+        where M : struct, imat<M, V>
+        where V : struct, ivec<V>
+    {
+        /// <summary>
+        /// Sets or gets the matrix' column vector at the given index
+        /// </summary>
+        /// <param name="column">Column vector index (zero-based)</param>
+        /// <value>New column vector</value>
+        /// <returns>Column vector</returns>
+        V this[int column] { set; get; }
+        /// <summary>
+        /// The matrix' main diagonal
+        /// </summary>
+        V MainDiagonal { get; }
+        /// <summary>
+        /// The matrix' column vectors
+        /// </summary>
+        V[] Columns { get; }
+        /// <summary>
+        /// The matrix' row vectors
+        /// </summary>
+        V[] Rows { get; }
+
+        (M U, M D) IwasawaDecompose();
+
+        void FromArray(V[] v);
+        V Solve(V v);
     }
 
     public static partial class glm
@@ -260,39 +306,13 @@ namespace GlmNet
 			return Inverse / det;
         }
 
-        public static M Zero<M, V>()
-            where M : struct, imat<M, V>
-            where V : struct, ivec<V>
-        {
-            switch (new M())
-            {
-                case mat2 _: return (M)(dynamic)mat2.Zero;
-                case mat3 _: return (M)(dynamic)mat3.Zero;
-                case mat4 _: return (M)(dynamic)mat4.Zero;
-            }
 
-            throw new NotImplementedException();
-        }
-
-        public static M Identity<M, V>()
-            where M : struct, imat<M, V>
-            where V : struct, ivec<V>
-        {
-            switch (new M())
-            {
-                case mat2 _: return (M)(dynamic)mat2.Identity;
-                case mat3 _: return (M)(dynamic)mat3.Identity;
-                case mat4 _: return (M)(dynamic)mat4.Identity;
-            }
-
-            throw new NotImplementedException();
-        }
-
+        // TODO
         public static M CholeskyDecompose<M, V>(this M a)
             where M : struct, imat<M, V>
             where V : struct, ivec<V>
         {
-            M res = Zero<M, V>();
+            M res = default;
 
             for (int i = 0; i < res.Size; ++i)
                 for (int j = i; j >= 0; --j)
